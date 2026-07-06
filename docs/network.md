@@ -6,6 +6,8 @@ icon: lucide/wifi
 
 `Request` 提供 HTTP 请求和 WebSocket。适合读取接口、提交简单数据、连接本地服务。
 
+如果你要系统性地接第三方 HTTP 接口、Webhook 或其他本地服务，可以继续看 [外部 API 总览](external_api.md)。
+
 !!! warning "隐私提醒"
     不要把服务器 token、账号信息、聊天内容随手发到第三方接口。公开脚本前尤其要检查 URL 和 headers。
 

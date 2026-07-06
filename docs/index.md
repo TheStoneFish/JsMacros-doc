@@ -14,10 +14,11 @@ icon: lucide/home
 | --- | --- |
 | 第一次安装和运行脚本 | [快速开始](quick_start.md) |
 | 不知道有哪些全局 API | [API 总览](api_overview.md) |
-| 想写按键、聊天、Tick 监听 | [事件系统](events.md) |
+| 想写按键、聊天、Tick 监听 | [事件系统](events.md)、[实战模式](practical_patterns.md) |
 | 想操作玩家、背包、世界、实体 | [玩家](player.md)、[背包](inventory.md)、[世界与方块](world.md)、[实体](entities.md) |
 | 想画 HUD 或 3D 标记 | [HUD 渲染](hud.md) |
 | 想读写文件、请求接口、跨脚本共享状态 | [文件系统](fs.md)、[网络请求](network.md)、[全局变量](globals.md) |
+| 想调用外部接口或其他 Mod | [外部 API 总览](external_api.md)、[Baritone API](baritone_api.md) |
 
 ## 如何参与文档贡献？
 
@@ -35,12 +36,14 @@ icon: lucide/home
 - [x] 快速开始
 - [x] API 总览
 - [x] 事件系统
+- [x] 实战模式
 - [x] 玩家
 - [x] 背包
 - [x] 世界与方块
 - [x] 实体
 - [x] HUD 渲染
 - [x] 系统 API
+- [x] 外部集成
 - [x] Java API
 - [x] 源码分析
 

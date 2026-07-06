@@ -6,6 +6,8 @@ icon: lucide/code-2
 
 JsMacros 脚本运行在 JVM 环境里，可以访问 Java 类、Minecraft 原始对象和反射 API。普通脚本优先用 helper；只有 helper 不够时再进入这一层。
 
+如果目标是调用其他 Mod 暴露的 Java API，比如 Baritone，先看 [外部 API 总览](external_api.md)，再看 [Baritone API](baritone_api.md)。
+
 ## JavaWrapper
 
 最常见的 Java 互操作不是反射，而是把 JS 函数包装成 Java 回调。
@@ -117,4 +119,3 @@ const versions = Reflection.getAllCompiledJavaClassVersions("example.Hello")
 | `createLibrary(className, javaCode)` | 编译并注册库 |
 
 这些适合写扩展库，不是普通宏脚本的必需知识。
-

@@ -88,4 +88,4 @@ JsMacros.on("RecvMessage", JavaWrapper.methodToJava((e) => {
 - 想查方块、实体、维度和世界扫描，看 [世界与方块](world.md) 和 [实体](entities.md)。
 - 想做屏幕显示、ESP、路径线，看 [HUD 渲染](hud.md)。
 - 想访问 Java 类、反射、编译 Java，看 [Java 与反射](java_api.md)。
-
+- 想调用 HTTP、Webhook、其他 Mod 或 Baritone，看 [外部 API 总览](external_api.md)。

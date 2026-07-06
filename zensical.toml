@@ -53,6 +53,7 @@ nav = [
         { "事件系统" = "events.md" },
         { "事件过滤器" = "event_filters.md" },
         { "服务脚本" = "services.md" },
+        { "实战模式" = "practical_patterns.md" },
         { "常用类型" = "types.md" },
         { "语言扩展" = "extensions.md" },
     ] },
@@ -76,6 +77,10 @@ nav = [
         { "全局变量" = "globals.md" },
         { "Java 与反射" = "java_api.md" },
         { "时间与工具" = "time_utils.md" },
+    ] },
+    { "外部集成" = [
+        { "外部 API 总览" = "external_api.md" },
+        { "Baritone API" = "baritone_api.md" },
     ] },
     { "源码分析" = "source_analysis.md" },
 ]
