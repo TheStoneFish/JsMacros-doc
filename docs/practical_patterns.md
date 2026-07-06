@@ -61,18 +61,19 @@ JsMacros.on("RecvMessage", JavaWrapper.methodToJava((e) => {
 
 ## 安全睡眠
 
-`Time.sleep()` 不知道你的脚本是否已经关闭。长等待建议拆成小段。
+`Time.sleep()` 不知道你的脚本是否已经关闭。长等待建议拆成小段，并且每段都检查脚本是否还是当前这一轮运行。
 
 ```javascript
-function safeSleep(ms, key = "my_script") {
+function safeSleep(ms, isRunning, step = 50) {
     const end = Time.time() + ms
-    while (Time.time() < end) {
-        if (!GlobalVars.getBoolean(key)) return false
-        Time.sleep(Math.min(100, end - Time.time()))
+    while (isRunning() && Time.time() < end) {
+        Time.sleep(Math.min(step, end - Time.time()))
     }
-    return true
+    return isRunning()
 }
 ```
+
+更完整的启停框架看 [脚本模板](script_template.md)。那一页会解释为什么只写 boolean 还不够，以及为什么快速关开脚本时老线程可能复活。
 
 ## 后台工作线程
 
@@ -214,4 +215,3 @@ function waitUntil(check, timeoutMs = 5000) {
 ```
 
 适合等待：容器打开、寻路结束、聊天返回、物品刷新、世界加载。
-

@@ -13,7 +13,7 @@ icon: lucide/home
 | 目标 | 推荐页面 |
 | --- | --- |
 | 第一次安装和运行脚本 | [快速开始](quick_start.md) |
-| 不知道有哪些全局 API | [API 总览](api_overview.md) |
+| 不知道脚本该怎么组织 | [脚本模板](script_template.md)、[API 总览](api_overview.md) |
 | 想写按键、聊天、Tick 监听 | [事件系统](events.md)、[实战模式](practical_patterns.md) |
 | 想操作玩家、背包、世界、实体 | [玩家](player.md)、[背包](inventory.md)、[世界与方块](world.md)、[实体](entities.md) |
 | 想画 HUD 或 3D 标记 | [HUD 渲染](hud.md) |
@@ -35,6 +35,7 @@ icon: lucide/home
 - [x] 主页
 - [x] 快速开始
 - [x] API 总览
+- [x] 脚本模板
 - [x] 事件系统
 - [x] 实战模式
 - [x] 玩家

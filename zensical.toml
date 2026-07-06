@@ -50,6 +50,7 @@ nav = [
     { "脚本基础" = [
         { "API 总览" = "api_overview.md" },
         { "全局库参考" = "global_api_reference.md" },
+        { "脚本模板" = "script_template.md" },
         { "事件系统" = "events.md" },
         { "事件过滤器" = "event_filters.md" },
         { "服务脚本" = "services.md" },
