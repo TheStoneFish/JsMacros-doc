@@ -17,12 +17,12 @@ site_name = "JsMacros文档"
 # meaningful description of the site content for use by search engines.
 #
 # Read more: https://zensical.org/docs/setup/basics/#site_description
-site_description = "A new project generated from the default template project."
+site_description = "面向中文玩家和脚本作者的非官方 JsMacros 文档。"
 
 # The site_author attribute. This is used in the HTML head element.
 #
 # Read more: https://zensical.org/docs/setup/basics/#site_author
-site_author = "<your name here>"
+site_author = "JsMacros-doc contributors"
 
 # The site_url is the canonical URL for your site. When building online
 # documentation you should set this.
@@ -47,11 +47,37 @@ Copyright &copy; 2026 The authors
 nav = [
     { "主页" = "index.md" },
     { "快速开始" = "quick_start.md" },
-    { "玩家" = "player.md" },
-    { "背包" = "" },
-    { "世界" = "" },
-    { "Java Api" = "" },
-    { "源码分析" = "" },
+    { "脚本基础" = [
+        { "API 总览" = "api_overview.md" },
+        { "全局库参考" = "global_api_reference.md" },
+        { "事件系统" = "events.md" },
+        { "事件过滤器" = "event_filters.md" },
+        { "服务脚本" = "services.md" },
+        { "常用类型" = "types.md" },
+        { "语言扩展" = "extensions.md" },
+    ] },
+    { "游戏 API" = [
+        { "聊天与文本" = "chat.md" },
+        { "客户端" = "client.md" },
+        { "玩家" = "player.md" },
+        { "交互管理器" = "interaction.md" },
+        { "背包" = "inventory.md" },
+        { "世界与方块" = "world.md" },
+        { "方块 Helper" = "blocks.md" },
+        { "实体" = "entities.md" },
+        { "位置与向量" = "position.md" },
+        { "键盘输入" = "keybind.md" },
+        { "HUD 渲染" = "hud.md" },
+        { "脚本屏幕" = "screen.md" },
+    ] },
+    { "系统 API" = [
+        { "文件系统" = "fs.md" },
+        { "网络请求" = "network.md" },
+        { "全局变量" = "globals.md" },
+        { "Java 与反射" = "java_api.md" },
+        { "时间与工具" = "time_utils.md" },
+    ] },
+    { "源码分析" = "source_analysis.md" },
 ]
 
 # With the "extra_css" option you can add your own CSS styling to customize

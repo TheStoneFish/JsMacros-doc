@@ -4,6 +4,9 @@ icon: lucide/angry
 
 # 玩家
 
+!!! note "2.x 推荐"
+    读取玩家信息用 `Player.getPlayer()`；攻击、交互、挖掘等动作优先用 `Player.getInteractionManager()` 或 `Player.interactions()`。旧的 `player.attack()`、`player.interactBlock()` 等方法还能在类型里看到，但已迁移到交互管理器。
+
 ## 获取玩家对象
 
 ```javascript
@@ -11,6 +14,16 @@ const player = Player.getPlayer()
 ```
 
 获取到玩家对象后, 后面的操作都需要通过这个对象进行。
+
+`Player.getPlayer()` 可能返回 `null`，比如还没进入世界时：
+
+```javascript
+const player = Player.getPlayer()
+if (!player) {
+    Chat.log("请先进入世界")
+    return
+}
+```
 
 ## 获取玩家名字
 
@@ -38,6 +51,9 @@ const playerName = player.getName().getString()
         Chat.log(playerName)方法可以输出文本到屏幕。
 
 ## 攻击
+
+!!! warning "旧写法说明"
+    本节保留 `player.attack()` 的教程写法，方便读懂旧脚本。新脚本建议改用 [交互管理器](interaction.md)：`Player.interactions().attack()` 或 `Player.interactions().attack(entity)`。
 
 ### attack()
 
@@ -86,6 +102,9 @@ player.attack(targetEntity)
         后面会教如何使用按键开关脚本
 
 ## 交互
+
+!!! warning "旧写法说明"
+    `player.interact()`、`player.interactEntity()`、`player.interactBlock()`、`player.interactItem()` 已迁移到 `Player.getInteractionManager()`。新脚本优先写 `Player.interactions().interactBlock(...)`。
 
 ### interact()
 
@@ -178,7 +197,7 @@ player.interactBlock(0, -61, 0, 'up', false)
 
     > `World.findBlocksMatching("minecraft:grass_block", 1)` 方法可以获取到玩家所在区块以及周围一圈区块内的所有草方块。
 
-    > `block.toBlockPos().distanceTo(Player.getPlayer())` 方法可以获取到方块与玩家的距离。
+    > `Player.getPlayer().getBlockPos().distanceTo(block)` 方法可以获取到方块与玩家的距离。
 
     > `player.interactBlock(x, y, z, direction, offHand)` 方法可以与指定方块进行交互。
 
@@ -191,8 +210,8 @@ player.interactBlock(0, -61, 0, 'up', false)
             const targetBlocks = World.findBlocksMatching("minecraft:grass_block", 1)
             for (let block of targetBlocks) { // 遍历草方块列表里所有草方块
                 // 判断每个草方块距离玩家的距离，若在玩家周围4.5格范围内则用主手与它的顶面交互
-                if (block.toBlockPos().distanceTo(Player.getPlayer()) < 4.5) {
-                    player.interactBlock(block.x, block.y, block.z, 'up', false)
+                if (Player.getPlayer().getBlockPos().distanceTo(block) < 4.5) {
+                    player.interactBlock(block.getX(), block.getY(), block.getZ(), 'up', false)
                 }
             }
             Time.sleep(100)
@@ -211,4 +230,90 @@ player.interactBlock(0, -61, 0, 'up', false)
 ```javascript
 const player = Player.getPlayer()
 player.interactItem(false)
+```
+
+## Player 全局库速查
+
+| 方法 | 作用 |
+| --- | --- |
+| `openInventory()` | 获取当前背包/容器对象 |
+| `getPlayer()` | 获取本地玩家实体，可能为 `null` |
+| `getInteractionManager()` / `interactions()` | 获取交互管理器 |
+| `getGameMode()` / `setGameMode(gameMode)` | 读取/设置游戏模式 |
+| `rayTraceBlock(distance, fluid)` | 准心方块射线 |
+| `detailedRayTraceBlock(distance, fluid)` | 更详细的方块命中结果 |
+| `rayTraceEntity(distance)` | 准心实体射线 |
+| `writeSign(...)` | 写告示牌 |
+| `takeScreenshot(...)` | 截图 |
+| `takePanorama(...)` | 全景截图 |
+| `getStatistics()` | 统计信息 |
+| `getReach()` | 触及距离 |
+| `createPlayerInput(...)` | 创建移动输入 |
+| `addInput(input)` / `addInputs(inputs)` | 注入移动输入 |
+| `clearInputs()` | 清空输入队列 |
+| `predictInput(input)` / `predictInputs(inputs)` | 预测移动结果 |
+| `createPos(...)` / `createBlockPos(...)` | 创建位置 |
+| `createVec(...)` / `createLookingVector(...)` | 创建向量 |
+
+## 本地玩家常用信息
+
+```javascript
+const player = Player.getPlayer()
+if (!player) return
+
+Chat.log(player.getPlayerName())
+Chat.log(`${player.getX()}, ${player.getY()}, ${player.getZ()}`)
+Chat.log(`血量: ${player.getHealth()} / ${player.getMaxHealth()}`)
+Chat.log(`经验等级: ${player.getXPLevel()}`)
+```
+
+常用方法来自 `EntityHelper`、`LivingEntityHelper` 和 `PlayerEntityHelper`：
+
+| 方法 | 作用 |
+| --- | --- |
+| `getPos()` / `getBlockPos()` / `getEyePos()` | 坐标 |
+| `getYaw()` / `getPitch()` | 朝向 |
+| `getVelocity()` | 速度 |
+| `getHealth()` / `getMaxHealth()` | 血量 |
+| `getMainHand()` / `getOffHand()` | 主副手物品 |
+| `getStatusEffects()` | 状态效果 |
+| `getAttackCooldownProgress()` | 攻击冷却 |
+| `getAbilities()` | 飞行、创造等能力 |
+
+## 准心检测
+
+```javascript
+const block = Player.rayTraceBlock(5, false)
+if (block) {
+    Chat.log(`看着: ${block.getId()}`)
+}
+
+const entity = Player.rayTraceEntity(5)
+if (entity) {
+    Chat.log(`看着实体: ${entity.getType()}`)
+}
+```
+
+`fluid=true` 时方块射线会考虑流体。
+
+## 移动输入
+
+移动输入适合做短暂、可预测的移动，不适合无脑高速循环。
+
+```javascript
+const input = Player.createPlayerInput(1, 0, Player.getPlayer().getYaw(), 0, false, false, true)
+Player.addInput(input)
+```
+
+清空：
+
+```javascript
+Player.clearInputs()
+```
+
+预测：
+
+```javascript
+const predicted = Player.predictInput(input)
+Chat.log(predicted)
 ```
