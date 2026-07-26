@@ -24,7 +24,7 @@ icon: lucide/home
 
 ## 如何参与文档贡献？
 
-使用[GitHub](https://github.com/TheStoneFish/JsMacros-doc)提交PR即可参与文档贡献, 具体操作如下:
+使用[GitHub](https://github.com/xiao-qiu-qiu/JsMacros-doc)提交 PR 即可参与文档贡献，具体操作如下：
 
 1. 首先Fork本仓库到自己的github账号下
 2. 在自己的仓库中clone到本地
