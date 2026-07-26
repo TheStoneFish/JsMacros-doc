@@ -182,6 +182,17 @@ icon: lucide/list
 | `moveForward` / `moveBackward` / `moveStrafeLeft` / `moveStrafeRight` | 移动辅助 |
 | `createVec` / `createLookingVector` / `createPos` / `createBlockPos` | 坐标向量 |
 
+## PositionCommon
+
+| 方法 | 作用 |
+| --- | --- |
+| `createPos(x, y, z)` / `createPos(x, y)` | 创建 `Pos3D` / `Pos2D` |
+| `createVec(x1, y1, z1, x2, y2, z2)` / `createVec(x1, y1, x2, y2)` | 创建 `Vec3D` / `Vec2D` |
+| `createLookingVector(entity)` / `createLookingVector(yaw, pitch)` | 视线方向向量 |
+| `createBlockPos(x, y, z)` | 创建 `BlockPosHelper` |
+
+详见 [位置与向量](position.md)。
+
 ## Reflection
 
 | 方法 | 作用 |
