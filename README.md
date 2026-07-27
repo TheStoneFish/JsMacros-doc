@@ -2,7 +2,7 @@
 
 面向中文玩家和脚本作者的**非官方** [JsMacros](https://modrinth.com/mod/jsmacros) 文档。JsMacros 是一个 Minecraft 客户端模组，让你用 JavaScript 编写宏脚本——自动钓鱼、聊天过滤、HUD 绘制、容器操作、自定义命令等等。
 
-> 在线阅读：<https://xiao-qiu-qiu.github.io/JsMacros-doc/>
+> 在线阅读：<http://jsmacros.mynotes.world/>
 
 ## 这份文档有什么不一样
 
