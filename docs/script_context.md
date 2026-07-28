@@ -28,24 +28,44 @@ JsMacros 的并发模型可以概括成三句话：
 
 1. **每次脚本运行都是一个新线程。** 按键宏按两次、事件触发两次，就是两个互不相干的线程各跑一份脚本。
 2. **脚本线程默认不阻塞游戏。** `Time.sleep(1000)`、`Client.waitTick()`、`JsMacros.waitForEvent(...)` 卡住的只是脚本自己的线程，游戏照常渲染。
-3. **joined（加入线程）是例外。** 勾选 joined 的脚本/监听器会"加入"触发事件的线程（通常是游戏主线程），事件会等你的代码跑完（或释放锁）才继续——所以你才有机会 `cancel()` 掉 `SendMessage` 这类事件。
+3. **joined（加入线程）是例外。** 勾选 joined 的脚本/监听器会"加入"触发事件的线程，事件会等你的代码跑完（或释放锁）才继续——所以你才有机会 `cancel()` 掉 `SendMessage` 这类事件。
 
 ### joined 与看门狗
-
-joined 脚本阻塞的是游戏线程本身，因此 JsMacros 用"看门狗"保护游戏：joined 脚本占住游戏线程太久（默认约 500 毫秒，可在 JsMacros 设置里调整）会被强制终止。d.ts 里 `Client.runOnMainThread` 的 `watchdogMaxTime` 参数就是同一套机制：
+这类事件有几率触发看门狗：
+```
+SendMessage
+RecvMessage
+Key
+SignEdit
+ClickSlot
+DropSlot
+```
+joined 脚本阻塞的是游戏线程本身，因此 JsMacros 用"看门狗"保护游戏：joined 脚本占住游戏线程太久（默认约 500 毫秒，可在 JsMacros 设置里调整）会被强制终止。`Client.runOnMainThread` 的 `watchdogMaxTime` 参数就是同一套机制：
 
 ```typescript
 Client.runOnMainThread(runnable: MethodWrapper): void;
-Client.runOnMainThread(runnable: MethodWrapper, watchdogMaxTime: long): void;   // 看门狗超时(毫秒)
+Client.runOnMainThread(runnable: MethodWrapper, watchdogMaxTime: long): void;  
 Client.runOnMainThread(runnable: MethodWrapper, await: boolean, watchdogMaxTime: long): void;
 ```
+典型用法——joined：
 
-!!! warning "joined 代码要短"
-    joined 回调里只做两件事：改/取消事件，然后 `context.releaseLock()` 释放锁。耗时逻辑（sleep、waitForEvent、循环）放在释放锁之后，或者干脆别用 joined。在 joined 回调里 `Time.sleep(1000)` 轻则整个游戏卡 1 秒，重则脚本直接被看门狗杀掉。
+```javascript
+// 绑定在 SendMessage 事件上、勾选了 joined 的脚本
+JsMacros.assertEvent(event, 'SendMessage')
 
+if (event.message.startsWith(".ping")) {
+    // 1. 先取消事件
+    event.cancel()         
+    // 2. 释放锁, 游戏线程继续 
+    context.releaseLock()  
+     // 3. 之后再做耗时的事, 不卡游戏
+    Time.sleep(1000)           
+    Chat.log("pong!")
+}
+```
 ### 排队与优先级（JS/JEP 专用）
 
-同一个脚本上下文里，JS 回调是排队执行的。`JavaWrapper` 提供了几个调度工具：
+同一个脚本上下文里，JS 回调是排队执行的(事件循环)。`JavaWrapper` 提供了几个调度工具：
 
 | 方法 | 说明 |
 | --- | --- |
@@ -67,19 +87,6 @@ Client.runOnMainThread(runnable: MethodWrapper, await: boolean, watchdogMaxTime:
 | `getCtx()` | 拿到底层的 `BaseScriptContext`（见下节） |
 | `getLockThread()` / `setLockThread(thread)` | 查看/设置持锁线程，一般用不到 |
 
-典型用法——joined 事件先办正事再干慢活：
-
-```javascript
-// 绑定在 SendMessage 事件上、勾选了 joined 的脚本
-JsMacros.assertEvent(event, 'SendMessage')
-
-if (event.message !== null && event.message.startsWith(".ping")) {
-    event.cancel()          // 1. 先取消事件
-    context.releaseLock()   // 2. 释放锁, 游戏线程继续
-    Time.sleep(1000)        // 3. 之后再做耗时的事, 不卡游戏
-    Chat.log("pong!")
-}
-```
 
 !!! note "回调里的 context 是另一个"
     `JsMacros.on("Xxx", JavaWrapper.methodToJava((e, ctx) => {...}))` 中回调的第二个参数 `ctx` 才是**这次事件触发**对应的容器；全局 `context` 是**注册监听的那个脚本**的容器。在回调里释放锁必须用 `ctx.releaseLock()`。
@@ -126,17 +133,6 @@ Chat.log(`启动于: ${ctx.startTime}, 绑定线程数: ${ctx.getBoundThreads().
 | `JavaWrapper.stop()` | 脚本内部自杀式关闭自己的上下文 |
 | `ctx.closeContext()` | 关闭任意拿得到的上下文 |
 | `JsMacros.off(listener)` + 注销资源 | 不关上下文，只摘掉监听器；没有存活理由后上下文自然回收 |
-
-排查"僵尸脚本"可以用 `JsMacros.getOpenContexts()`：
-
-```javascript
-const contexts = JsMacros.getOpenContexts()
-Chat.log(`当前存活的脚本上下文: ${contexts.size()} 个`)
-for (const ctx of contexts) {
-    const f = ctx.getFile()
-    Chat.log(`- ${f ? f.getName() : "(无文件)"} 监听器数: ${ctx.eventListeners.size()}`)
-}
-```
 
 !!! note "别一把梭全关"
     `getOpenContexts()` 返回的是**所有**未回收的上下文，包括正在运行的服务和当前脚本自己。遍历 `closeContext()` 之前先看清楚是谁。
@@ -243,9 +239,6 @@ GUI 里每一条"事件/按键 → 脚本文件"的绑定，对应一个 `Script
 Chat.log(`当前档案: ${JsMacros.getProfile().getCurrentProfileName()}`)
 Chat.log(`宏文件夹: ${JsMacros.getConfig().macroFolder.getAbsolutePath()}`)
 ```
-
-另外 `JsMacros.open(path)` 和 `JsMacros.openUrl(url)` 在 2.1.0 中已标记废弃（建议改用 Utils 库），不建议再用。
-
 !!! tip "相关页面"
     - 事件注册（`on` / `once` / `off` / `waitForEvent`）详见[事件系统](events.md)
     - 给事件加过滤条件详见[事件过滤器](event_filters.md)

@@ -9,7 +9,7 @@ icon: lucide/image
 典型用途：动态小地图、自绘图表/进度环、给加载的图片打水印、运行时生成的图标或背景。
 
 !!! note "本页与《HUD 渲染》的分工"
-    `Image` 元素本身（`addImage` 的 14 个参数、`imageBuilder()` 的全部链式方法）在 [HUD 渲染](hud.md#图片-image) 已完整讲过。本页专讲 `CustomImage` 对象：怎么创建、怎么在上面画、怎么让修改生效。
+    `Image` 元素本身（`addImage` 的 14 个参数、`imageBuilder()` 的全部链式方法）在 [HUD 渲染](hud.md#image) 已完整讲过。本页专讲 `CustomImage` 对象：怎么创建、怎么在上面画、怎么让修改生效。
 
 ## 工作流程：四步
 
@@ -251,7 +251,7 @@ d2d.setOnInit(JavaWrapper.methodToJava(() => {
 d2d.register()
 ```
 
-`addImage` 全部重载、`Image$Builder` 全部方法、以及 Draw2D 的生命周期规则见 [HUD 渲染](hud.md#图片-image)。在 `Hud.createScreen()` 创建的屏幕上用法完全相同（`IScreen` 同样有 `addImage` / `imageBuilder`），见[脚本屏幕](screen.md)。
+`addImage` 全部重载、`Image$Builder` 全部方法、以及 Draw2D 的生命周期规则见 [HUD 渲染](hud.md#image)。在 `Hud.createScreen()` 创建的屏幕上用法完全相同（`IScreen` 同样有 `addImage` / `imageBuilder`），见[脚本屏幕](screen.md)。
 
 ## 完整示例：渐变色块 + 文字显示在 HUD
 

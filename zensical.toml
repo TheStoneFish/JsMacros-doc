@@ -49,16 +49,16 @@ nav = [
     { "快速开始" = "quick_start.md" },
     { "脚本基础" = [
         { "API 总览" = "api_overview.md" },
-        { "全局库参考" = "global_api_reference.md" },
         { "脚本模板" = "script_template.md" },
         { "脚本上下文" = "script_context.md" },
+        { "常用类型" = "types.md" },
+        { "语言扩展" = "extensions.md" },
+    ] },
+    { "事件系统" = [
         { "事件系统" = "events.md" },
         { "事件参考" = "events_reference.md" },
         { "事件过滤器" = "event_filters.md" },
         { "服务脚本" = "services.md" },
-        { "实战模式" = "practical_patterns.md" },
-        { "常用类型" = "types.md" },
-        { "语言扩展" = "extensions.md" },
     ] },
     { "游戏 API" = [
         { "聊天与文本" = "chat.md" },
@@ -75,7 +75,7 @@ nav = [
         { "实体" = "entities.md" },
         { "实体参考" = "entities_reference.md" },
         { "位置与向量" = "position.md" },
-        { "键盘输入" = "keybind.md" },
+        { "键盘与鼠标输入" = "keybind.md" },
         { "HUD 渲染" = "hud.md" },
         { "自定义图像" = "custom_image.md" },
         { "脚本屏幕" = "screen.md" },
@@ -91,8 +91,7 @@ nav = [
     { "外部集成" = [
         { "外部 API 总览" = "external_api.md" },
         { "Baritone API" = "baritone_api.md" },
-    ] },
-    { "源码分析" = "source_analysis.md" },
+    ] }
 ]
 
 # With the "extra_css" option you can add your own CSS styling to customize

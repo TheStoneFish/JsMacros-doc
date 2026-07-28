@@ -207,8 +207,3 @@ const listener = JsMacros.on("RecvPacket", blockUpdate, JavaWrapper.methodToJava
 4. **有状态的过滤器不要共享实例**：`modulus` / `limited` 内部有 `count` 计数，一个实例挂到两个监听器上会共用计数，各建各的；
 5. **`waitForEvent` 只有 JS 谓词可用**：它没有 `EventFilter` 重载，等待型逻辑本身低频，JS 谓词足够。
 
-## 下一步
-
-- [事件系统](events.md)——`on` / `once` / `waitForEvent` 全部重载与 joined 机制
-- [服务脚本](services.md)——常驻监听 + 过滤器是服务的标准搭配
-- [全部事件参考](events_reference.md)——各事件的字段，写 `compile` 条件前先查这里

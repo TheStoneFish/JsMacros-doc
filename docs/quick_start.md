@@ -11,7 +11,7 @@ icon: lucide/rocket
 !!! warning "1.21.1 及以上版本注意"
     Modrinth 上的官方构建可能落后于最新 Minecraft 版本。对于 >= 1.21.1，可以从 GitHub 构建源码；如果游戏版本没有重大变化，也可以尝试修改 jar 内的 `fabric.mod.json` 版本限制；或者把仓库 fork 下来用 GitHub Action 构建。
 
-从 [Modrinth](https://modrinth.com/mod/jsmacros) 获取 [JsMacros](https://modrinth.com/mod/jsmacros)，像普通 Fabric 模组一样放进 `mods` 文件夹即可。本站文档对应 **JsMacros 2.1.0 / Minecraft 1.21.1**。
+从 [Modrinth](https://modrinth.com/mod/jsmacros) 获取 [JsMacros](https://modrinth.com/mod/jsmacros)，像普通 Fabric 模组一样放进 `mods` 文件夹即可。**。
 
 ## 目录结构
 
@@ -170,10 +170,3 @@ JsMacros.on('SendMessage', true, JavaWrapper.methodToJava((e, context) => {
 
 !!! tip "主动打日志"
     与其等报错，不如在关键位置用 `Chat.log()` 输出中间状态；对可能出错的段落用 `try { ... } catch (e) { Chat.log(`§c出错: ${e}`) }` 包起来，能把问题定位得更准。[脚本模板](script_template.md)里有一个现成的日志分级函数。
-
-## 下一步
-
-- [脚本模板](script_template.md)——可开关、可长期运行的脚本骨架，强烈建议先看。
-- [API 总览](api_overview.md)——一张地图看清所有全局库，知道"想做 X 该去哪页"。
-- [事件系统](events.md)——`JsMacros.on` / `waitForEvent` 的完整用法。
-- [实战模式](practical_patterns.md)——常用代码套路手册。

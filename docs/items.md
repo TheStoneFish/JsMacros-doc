@@ -36,7 +36,7 @@ Chat.log(`${item.getName()} 一组最多 ${item.getMaxCount()} 个`)
 | 背包/容器槽位 | `Player.openInventory().getSlot(i)` | 见[背包与容器](inventory.md)，槽位号先用 `getMap()` 查 |
 | 主手/副手 | `Player.getPlayer().getMainHand()` / `getOffHand()` | 见[实体](entities.md)的玩家部分 |
 | 盔甲栏 | `Player.getPlayer().getHeadArmor()` 等 | 同上 |
-| 掉落物实体 | `itemEntity.getContainedItemStack()` | 见[实体](entities.md#掉落物-itementityhelper) |
+| 掉落物实体 | `itemEntity.getContainedItemStack()` | 见[实体](entities.md#itementityhelper) |
 | 事件字段 | 如 `HeldItemChange` 的 `item` / `oldItem`，`ItemPickup`、`ItemDamage` 的 `item` | 见[事件系统](events.md)与[全部事件参考](events_reference.md) |
 | 注册表（凭 ID 造一个） | `Client.getRegistryManager().getItemStack("diamond_sword")` | 还有 `getItemStack(id, nbt)`、`getItem(id)`（返回 `ItemHelper`）、`getItemIds()` |
 
@@ -70,7 +70,7 @@ Chat.log(`${stack.getName().getString()} 最大耐久 ${stack.getMaxDurability()
 | `getCreativeTab()` | `JavaList<TextHelper>` | 所在创造模式物品栏分组名 |
 | `isTool()` | `boolean` | 是否为工具 |
 | `isWearable()` | `boolean` | 是否可穿戴（盔甲等） |
-| `isFood()` | `boolean` | 是否为食物（详细数据见下文[食物](#食物与-foodcomponenthelper)） |
+| `isFood()` | `boolean` | 是否为食物（详细数据见下文[食物](#foodcomponenthelper)） |
 
 ```javascript
 const stack = Player.getPlayer().getMainHand()
@@ -257,7 +257,7 @@ if (stack.isFood()) {
 | `isCanPlaceHidden()` | `boolean` | "可放置于"标记是否被隐藏 |
 | `isDyeHidden()` | `boolean` | 皮革染色是否被隐藏 |
 
-`getLore()` 返回 `TextHelper` 列表，逐行 `.getString()` 得到纯文本（服务器 RPG 装备的属性通常都写在这里），见下文[实战示例](#实战按-lore-找服务器-rpg-装备)。
+`getLore()` 返回 `TextHelper` 列表，逐行 `.getString()` 得到纯文本（服务器 RPG 装备的属性通常都写在这里），见下文[实战示例](#lore-rpg)。
 
 ### 冒险模式限制
 
@@ -272,7 +272,7 @@ if (stack.isFood()) {
 
 | 方法 | 返回 | 说明 |
 | --- | --- | --- |
-| `getCreative()` | `CreativeItemStackHelper` | 获得可修改版本（详见下文 [CreativeItemStackHelper](#creativeitemstackhelper创造模式修改物品)） |
+| `getCreative()` | `CreativeItemStackHelper` | 获得可修改版本（详见下文 [CreativeItemStackHelper](#creativeitemstackhelper)） |
 
 ### 构造器
 
@@ -370,7 +370,7 @@ if (!inv.is("Creative Inventory")) {
 }
 ```
 
-## NBT 详解
+## NBT 详解 {#nbt-详解}
 
 服务器玩家的刚需：RPG 服的装备属性、菜单物品的标记、宠物蛋的数据……都藏在物品 NBT 里。入口是 `stack.getNBT()`，返回 `NBTElementHelper$NBTCompoundHelper`（复合标签）。
 

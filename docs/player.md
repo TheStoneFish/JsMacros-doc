@@ -316,7 +316,7 @@ Player.writeSign(1, "只改这一行")
 
 | 方法 | 返回 | 说明 |
 | --- | --- | --- |
-| `getStatistics()` | `StatsHelper` | 获取统计信息对象，详见下方[统计信息](#统计信息-statshelper)小节 |
+| `getStatistics()` | `StatsHelper` | 获取统计信息对象，详见下方[统计信息](#statshelper)小节 |
 
 ### 移动输入
 
@@ -355,7 +355,7 @@ Player.writeSign(1, "只改这一行")
 
     详细用法见[位置与向量](position.md)。
 
-## 射线检测（准心检测）
+## 射线检测（准心检测） {#射线检测准心检测}
 
 射线（ray trace）就是"从玩家眼睛沿准心方向发射一条线，看打到什么"。
 
@@ -401,7 +401,7 @@ if (!hit.isMissed()) {
 !!! tip "配合交互管理器"
     "看着的实体"也可以用 `Player.interactions().getTargetedEntity()` 获取，它与游戏自己的目标选择逻辑一致。详见[交互管理器](interaction.md)。
 
-## 移动输入教学
+## 移动输入教学 {#移动输入教学}
 
 移动输入（`PlayerInput`）是"替玩家按键"的机制：你创建一串输入对象放进移动队列（MovementQueue），游戏**每个 tick 消耗一个**，就像玩家真的按下了那些键。适合做短暂、可预测的移动，不适合无脑高速循环。
 

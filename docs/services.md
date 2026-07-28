@@ -297,9 +297,3 @@ Chat.log("循环退出, 服务结束")
 
 !!! note "就算你不写退出条件"
     停止服务时脚本上下文会被关闭，正在 `waitTick()`/`Time.sleep()` 的线程会被中断（抛 `InterruptedException`），服务通常还是能停下来——但那是"被杀"，你的收尾代码没机会跑完。退出标志才是优雅关闭。
-
-## 下一步
-
-- [事件系统](events.md)——`on` / `off` / `waitForEvent` 与监听器清理
-- [事件过滤器](event_filters.md)——高频事件降频、Java 端过滤
-- [脚本上下文](script_context.md)——线程模型、上下文存活与 `getOpenContexts()` 排查僵尸脚本

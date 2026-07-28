@@ -40,7 +40,7 @@ jobs:
           key: ${{ secrets.KEY }}
           port: ${{ secrets.PORT }}
           source: site.tar.gz
-          target: /root/JsmacrosDoc/_incoming/
+          target: /www/wwwroot/jsmacros.mynotes.world_6666/
 
       - name: Deploy on server
         uses: appleboy/ssh-action@v1.0.3
@@ -51,14 +51,7 @@ jobs:
           port: ${{ secrets.PORT }}
           script: |
             set -e
-            cd /root/JsmacrosDoc
-
-            rm -rf site_new
-            mkdir site_new
-            tar -xzf _incoming/site.tar.gz -C site_new
-            rm -f _incoming/site.tar.gz
-
-            rm -rf site
-            mv site_new site
-
+            cd /www/wwwroot/jsmacros.mynotes.world_6666
+            rm -rf site/*
+            tar -xzf site.tar.gz -C site
             echo "Docs deployed successfully"

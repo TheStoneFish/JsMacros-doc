@@ -14,7 +14,7 @@ icon: lucide/home
 | --- | --- |
 | 第一次安装和运行脚本 | [快速开始](quick_start.md) |
 | 不知道脚本该怎么组织 | [脚本模板](script_template.md)、[API 总览](api_overview.md) |
-| 想写按键、聊天、Tick 监听 | [事件系统](events.md)、[事件参考](events_reference.md)、[实战模式](practical_patterns.md) |
+| 想写按键、聊天、Tick 监听 | [事件系统](events.md)、[事件参考](events_reference.md) |
 | 想操作玩家、背包、世界、实体 | [玩家](player.md)、[背包](inventory.md)、[物品与 NBT](items.md)、[世界与方块](world.md)、[实体](entities.md) |
 | 想画 HUD、3D 标记或自定义界面 | [HUD 渲染](hud.md)、[自定义图像](custom_image.md)、[脚本屏幕](screen.md) |
 | 想读写文件、请求接口、跨脚本共享状态 | [文件系统](fs.md)、[网络请求](network.md)、[全局变量](globals.md) |
@@ -34,9 +34,7 @@ icon: lucide/home
 使用zensical serve进行实时预览。
 ## 当前文档进度
 
-全部页面已依据 `JsMacros-2.1.0.d.ts` 完成重构，方法签名逐一核对：
-
-- [x] 脚本基础：快速开始、API 总览、全局库参考、脚本模板、脚本上下文、事件系统、事件参考、事件过滤器、服务脚本、实战模式、常用类型
+- [x] 脚本基础：快速开始、API 总览、脚本模板、脚本上下文、事件系统、事件参考、事件过滤器、服务脚本、实战模式、常用类型
 - [x] 游戏 API：聊天与文本、自定义命令、客户端、游戏设置、玩家、交互管理器、背包、物品与 NBT、世界与方块、世界扫描器、方块 Helper、实体、实体参考、位置与向量、键盘输入、HUD 渲染、自定义图像、脚本屏幕
 - [x] 系统 API：文件系统、网络请求、数据包、全局变量、Java 与反射、时间与工具
 - [x] 外部集成：外部 API 总览、Baritone API

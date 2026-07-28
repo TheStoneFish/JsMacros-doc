@@ -215,7 +215,7 @@ KeyBind.setKeyBind("key.sprint", null)
 | --- | --- | --- |
 | `action` | number | `1` 按下，`0` 松开 |
 | `key` | string | 键名，如 `key.keyboard.g` |
-| `mods` | string | 修饰键组合，见上文[修饰键组合 KeyMods](#修饰键组合-keymods) |
+| `mods` | string | 修饰键组合，见上文[修饰键组合 KeyMods](#keymods) |
 
 最简单的自定义快捷键——按 G 打招呼：
 

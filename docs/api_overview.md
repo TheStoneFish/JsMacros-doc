@@ -6,9 +6,6 @@ icon: lucide/map
 
 JsMacros 会在每个脚本里注入一批全局对象，不需要 `import`，直接用就行。本页是一张"地图"：先列出全部全局命名空间，再按"我想做什么"给出任务导向的索引。
 
-!!! note "API 真相源"
-    本页根据 `JsMacros-2.1.0.d.ts` 顶层 `declare` 列表整理，全局库一个不多、一个不少。签名里出现的 `JavaList`、`TextHelper`、`ItemStackHelper` 等类型不是普通 JS 对象，建议配合[常用类型](types.md)阅读。想逐个方法查签名，去[全局库参考](global_api_reference.md)。
-
 ## 全局变量
 
 除了库，还有三个直接注入的全局变量：
@@ -22,8 +19,6 @@ JsMacros 会在每个脚本里注入一批全局对象，不需要 `import`，�
 按键手动运行的脚本里，`event` 只是基础事件；在 `JsMacros.on` 的回调里，优先使用回调参数 `(e, context)` 而不是全局 `event`。
 
 ## 全局库地图
-
-`JsMacros-2.1.0.d.ts` 顶层一共声明了 16 个全局库：
 
 | 库 | 一句话职责 | 常用入口 | 文档页 |
 | --- | --- | --- | --- |
@@ -44,18 +39,13 @@ JsMacros 会在每个脚本里注入一批全局对象，不需要 `import`，�
 | `Utils` | 杂项：哈希、Base64、猜测聊天发送者、非空断言 | `hashString`、`encode`、`decode`、`guessName` | [时间与工具](time_utils.md) |
 | `World` | 世界：方块、实体、玩家列表、维度、光照、声音 | `getBlock`、`findBlocksMatching`、`getEntities`、`isWorldLoaded` | [世界与方块](world.md)、[方块](blocks.md)、[实体](entities.md) |
 
-除此之外，d.ts 顶层还有几个**纯类型**的命名空间，脚本运行时不存在，只服务于类型标注：
-
-- `Events`——所有事件的字段定义，见[事件系统](events.md)；
-- `Packages`——完整的 Java 包树（`Packages.java.lang.Thread` 这种写法在运行时是真实存在的入口），见 [Java 与反射](java_api.md)；
-- `InvMapType`、`KeyMod`——背包分区名、修饰键等字符串字面量类型，见[常用类型](types.md)。
 
 ## 我想做 X，该看哪页？
 
 | 我想…… | 去这页 |
 | --- | --- |
 | 在聊天栏输出调试信息 / 发送聊天和命令 | [聊天与文本](chat.md) |
-| 监听聊天消息并做出反应 | [事件系统](events.md)（`RecvMessage`）+ [实战模式](practical_patterns.md) |
+| 监听聊天消息并做出反应 | [事件系统](events.md)（`RecvMessage`）|
 | 写一个能"按一次开、再按一次关"的脚本 | [脚本模板](script_template.md)、[全局变量共享](globals.md) |
 | 自动点击容器、整理背包、丢物品 | [背包](inventory.md) |
 | 自动挖矿、走路、转头、攻击 | [交互](interaction.md)、[玩家](player.md) |
@@ -66,7 +56,7 @@ JsMacros 会在每个脚本里注入一批全局对象，不需要 `import`，�
 | 发 HTTP 请求、连 WebSocket、对接 Webhook | [网络请求](network.md) |
 | 保存配置文件、写日志文件 | [文件系统](fs.md) |
 | 让脚本随游戏启动自动运行 | [服务](services.md) |
-| 定时执行 / 等待若干秒 | [时间与工具](time_utils.md)、[实战模式](practical_patterns.md) |
+| 定时执行 / 等待若干秒 | [时间与工具](time_utils.md)|
 | 模拟按键、改键位 | [键盘与鼠标输入](keybind.md) |
 | 读写游戏设置（视频、声音、视距……） | [游戏设置](options.md) |
 | 监听 / 修改网络数据包 | [数据包](packets.md) |
@@ -74,18 +64,3 @@ JsMacros 会在每个脚本里注入一批全局对象，不需要 `import`，�
 | 让 Baritone 帮我寻路 | [Baritone API](baritone_api.md) |
 | 给高频事件加过滤器减少开销 | [事件过滤器](event_filters.md) |
 | 理解线程、joined、看门狗 | [脚本上下文](script_context.md) |
-| 只想查某个方法的签名 | [全局库参考](global_api_reference.md) |
-
-## 返回值的常见坑
-
-刚上手最容易被这几件事绊倒：
-
-| 现象 | 解释 | 写法 |
-| --- | --- | --- |
-| `Player.getPlayer()` 返回 `null` | 不在世界里，或客户端还没加载玩家 | `const p = Player.getPlayer(); if (!p) { /* 跳过 */ }` |
-| `World.getEntities()` 返回 `null` | 世界未加载 | 先用 `World.isWorldLoaded()` 判断 |
-| `TextHelper` 不能直接当字符串处理 | 它包装了 Minecraft 文本组件 | 用 `.getString()` 或 `.getStringStripFormatting()` |
-| `JavaList` 不是 JS 数组 | 这是 Java 集合 | 用 `.size()`、`.get(i)`，GraalJS 下一般也能 `for...of` |
-| joined 事件卡死游戏 | joined 会阻塞主线程，超 500ms 触发看门狗 | 修改完事件尽快 `context.releaseLock()` |
-
-更多类型层面的解释见[常用类型](types.md)；写出一个结构健康的脚本，见[脚本模板](script_template.md)。

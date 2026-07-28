@@ -325,35 +325,6 @@ event.unregisterOnStop(true, hud)
 
 `unregisterOnStop(offEvents, ...registrables)` 的执行顺序是：`stopListener` → 注销事件监听 → unregister 传入对象 → `postStopListener`。多次调用只保留最后一次设置。详见 [服务](services.md)。
 
-## 常用事件速查表
+## 事件速查表
+[全部事件参考](events_reference.md)。
 
-只列最常用的 20 个，一行一句；完整字段、方法、可取消性见 [全部事件参考](events_reference.md)。
-
-| 事件 | 触发时机 | 备注 |
-| --- | --- | --- |
-| `Tick` | 每游戏刻（1/20 秒） | 轮询、周期任务 |
-| `Key` | 键盘/鼠标按键 | 可取消；自定义快捷键 |
-| `MouseScroll` | 鼠标滚轮 | 可取消 |
-| `SendMessage` | 玩家发送聊天/命令前 | 可取消、可改写 `message` |
-| `RecvMessage` | 收到聊天消息 | 可取消、可改写 `text` |
-| `Title` | 标题/副标题/ActionBar | 可取消，`type` 区分三种 |
-| `OpenScreen` | 打开任意界面 | 读取 `screenName` |
-| `OpenContainer` | 打开容器 | 可取消 |
-| `ClickSlot` | 点击槽位 | 可取消；物品保护 |
-| `DropSlot` | 丢出槽位物品 | 可取消；防误丢 |
-| `SlotUpdate` | 槽位内容更新 | 背包/容器监控 |
-| `HeldItemChange` | 手持物品切换 | 含副手 |
-| `InteractBlock` / `InteractEntity` | 右键方块/实体 | 自动化记录 |
-| `AttackBlock` / `AttackEntity` | 攻击方块/实体 | 挖掘、战斗 |
-| `EntityLoad` / `EntityUnload` | 实体进入/离开渲染范围 | 实体雷达 |
-| `PlayerJoin` / `PlayerLeave` | 玩家进出 Tab 列表 | 玩家提醒 |
-| `JoinServer` / `Disconnect` | 连接/断开服务器 | 初始化与收尾 |
-| `HealthChange` | 玩家血量变化 | 低血量报警 |
-| `RecvPacket` / `SendPacket` | 网络包收发 | 可取消；高级用法，量大 |
-| `Custom` | 自定义事件 | 脚本间通信 |
-
-## 下一步
-
-- [全部事件参考](events_reference.md)——59 个事件逐一列出字段、方法、可取消性
-- [事件过滤器](event_filters.md)——EventFilter 详解
-- [服务](services.md)——常驻脚本与生命周期

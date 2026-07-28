@@ -13,7 +13,7 @@ icon: lucide/layout-dashboard
 | `Draw2D` / `Draw3D` | 常驻显示、ESP、状态栏 |
 | `ScriptScreen` | 可点击菜单、设置界面、输入框 |
 
-`IScreen` 继承自 `IDraw2D<IScreen>`，也就是说 [HUD 渲染](hud.md) 里 `Draw2D` 的 `addText` / `addRect` / `addItem` / `addImage` 等方法在屏幕上同样可用，详见[与 Draw2D 元素混用](#与-draw2d-元素混用)。
+`IScreen` 继承自 `IDraw2D<IScreen>`，也就是说 [HUD 渲染](hud.md) 里 `Draw2D` 的 `addText` / `addRect` / `addItem` / `addImage` 等方法在屏幕上同样可用，详见[与 Draw2D 元素混用](#draw2d)。
 
 ## 回调写法
 
@@ -571,7 +571,7 @@ screen.setOnInit(JavaWrapper.methodToJava((scr) => {
 
 各元素的详细参数、`Text` / `Rect` / `Image` 对象的方法见 [HUD 渲染](hud.md)。
 
-## 常见坑
+## 常见坑 {#常见坑}
 
 !!! warning "窗口缩放会清掉直接添加的控件"
     Minecraft 在窗口大小或 GUI 缩放变化时会重新执行屏幕的 init。**不在 `setOnInit` 回调里添加的控件/元素这时会全部消失。**所以正式脚本一律把控件添加逻辑写进 `setOnInit`，让它随时可重建。

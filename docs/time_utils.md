@@ -7,7 +7,7 @@ icon: lucide/clock
 `Time` 和 `Utils` 是 JsMacros 的杂项工具库：它们不直接操作游戏世界，但计时、睡眠、哈希、Base64、猜测聊天发送者这些"周边活"都靠它们。本页把两个库的方法**逐一列全**，并重点讲清新手最容易踩坑的 `Time.sleep()`。
 
 !!! note "剪贴板不在 Utils 里"
-    网上一些老教程会写 `Utils.copyToClipboard(...)` 或 `FUtils`——从 JsMacros 2.0.0 起，剪贴板方法已经**移到了 `Client` 库**（`Client.getClipboard()` / `Client.setClipboard()`）。本页 [剪贴板](#剪贴板clientsetclipboard) 一节有完整实战。
+    网上一些老教程会写 `Utils.copyToClipboard(...)` 或 `FUtils`——从 JsMacros 2.0.0 起，剪贴板方法已经**移到了 `Client` 库**（`Client.getClipboard()` / `Client.setClipboard()`）。本页 [剪贴板](#clientsetclipboard) 一节有完整实战。
 
 ## Time
 

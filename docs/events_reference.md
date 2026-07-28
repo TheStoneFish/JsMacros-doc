@@ -4,7 +4,7 @@ icon: lucide/list
 
 # 全部事件参考
 
-本页收录 JsMacros 2.1.0（MC 1.21.1）的**全部 59 个事件**，逐一对照 `JsMacros-2.1.0.d.ts` 中 `Events` 命名空间整理，按主题分组。事件机制（on/off、joined、waitForEvent、自定义事件）见 [事件系统](events.md)。
+本页收录 JsMacros 2.1.0（MC 1.21.1）的**全部 59 个事件**，逐一对照 `Events` 命名空间整理，按主题分组。事件机制（on/off、joined、waitForEvent、自定义事件）见 [事件系统](events.md)。
 
 !!! note "阅读须知"
     - **可取消**：事件实现了 `Cancellable` 接口，在 **joined** 监听中调用 `event.cancel()` 可拦截。
