@@ -52,6 +52,8 @@ jobs:
           script: |
             set -e
             cd /www/wwwroot/jsmacros.mynotes.world_6666
-            rm -rf site/*
+            rm -rf site
+            mkdir site
             tar -xzf site.tar.gz -C site
+            rm -f site.tar.gz
             echo "Docs deployed successfully"
