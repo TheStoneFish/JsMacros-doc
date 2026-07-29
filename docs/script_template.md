@@ -103,7 +103,6 @@ function main() {
 init()
 
 ```
-
 #### 全局变量控制
 
 ```javascript

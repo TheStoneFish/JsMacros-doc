@@ -111,8 +111,8 @@ Chat.log(Hud.getOpenScreenName())
 | --- | --- | --- |
 | `Hud.createScreen(title, dirtBG)` | `ScriptScreen` | 创建屏幕。`dirtBG` 为 `true` 用泥土纹理背景，`false` 用半透明背景 |
 | `Hud.openScreen(s)` | `void` | 打开屏幕；传 `null` 关闭当前屏幕 |
-| `Hud.getOpenScreen()` | `IScreen \| null` | 当前打开的屏幕对象（原版屏幕也会包成 `IScreen`） |
-| `Hud.getOpenScreenName()` | `string \| null` | 当前屏幕名 |
+| `Hud.getOpenScreen()` | `IScreen | null` | 当前打开的屏幕对象（原版屏幕也会包成 `IScreen`） |
+| `Hud.getOpenScreenName()` | `string | null` | 当前屏幕名 |
 | `Hud.isContainer()` | `boolean` | 当前屏幕是否是容器 |
 | `Hud.getMouseX()` / `getMouseY()` | `number` | 鼠标坐标 |
 | `Hud.getWindowWidth()` / `getWindowHeight()` | `number` | 当前窗口尺寸 |
@@ -144,7 +144,7 @@ if (Hud.isContainer()) {
 | `getTextFields()` | `JavaList<TextFieldWidgetHelper>` | 屏幕上所有文本输入框 |
 | `close()` | `void` | 关闭屏幕（会触发 `setOnClose` 回调） |
 | `reloadScreen()` | `IScreen` | 重新执行屏幕的 init（重建控件），见[常见坑](#常见坑) |
-| `getOnClose()` | `MethodWrapper \| null` | 读取已设置的关闭回调 |
+| `getOnClose()` | `MethodWrapper | null` | 读取已设置的关闭回调 |
 
 ### addButton — 按钮
 
@@ -538,7 +538,7 @@ Hud.openScreen(screen)
 | `setOnRender(cb)` | 方法 | 在主线程的渲染函数里加自定义逻辑。回调参数 `(pos: Pos3D, ctx)`，`pos` 的三个分量是 `mouseX`、`mouseY`、`tickDelta`，`ctx` 是原版 `GuiGraphics` |
 
 !!! warning "shouldCloseOnEsc = false 有风险"
-    d.ts 原文警告：如果设成 `false` 又没提供别的关闭途径（比如关闭按钮里调用 `screen.close()`），玩家会被卡在屏幕里出不来。
+    原文警告：如果设成 `false` 又没提供别的关闭途径（比如关闭按钮里调用 `screen.close()`），玩家会被卡在屏幕里出不来。
 
 !!! warning "setOnRender 运行在主线程"
     每帧都会调用。回调里绝对不要 `Time.sleep`、`Client.waitTick` 或做重活，否则整个游戏卡死。只做轻量绘制/读数。

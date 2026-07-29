@@ -17,7 +17,7 @@ Minecraft 客户端与服务器之间的网络数据包。这是 JsMacros 里最
 
 ## 监听收发包
 
-两个事件（对照 d.ts `Events` 命名空间核实）：
+两个事件：
 
 | 事件 | 成员 | 说明 |
 | --- | --- | --- |
@@ -39,11 +39,6 @@ JsMacros.on("RecvPacket", JavaWrapper.methodToJava((e) => {
 }))
 ```
 
-!!! warning "收发包事件的频率极高"
-    每秒会触发成百上千次，回调里别做重活，更别无条件 `Chat.log`（会刷屏卡死聊天栏）。
-    强烈建议配合[事件过滤器](event_filters.md)在 Java 侧先按 `type` 过滤，
-    d.ts 里官方给的例子就是 `compile('RecvPacket', 'eq(event.type, "BlockUpdateS2CPacket")')`。
-
 ### 怎么知道有哪些包名
 
 `getPacketNames()` 返回全部包名列表（官方注释：这些名字只是为了方便访问，将来可能变化）：
@@ -55,19 +50,8 @@ Chat.log(`共 ${names.size()} 个包名`)
 // 找出名字里带 "Chat" 的包
 for (let i = 0; i < names.size(); i++) {
     const name = names.get(i)
-    if (String(name).includes("Chat")) Chat.log(name)
+    if (name.includes("Chat")) Chat.log(name)
 }
-```
-
-另外还有静态方法 `PacketByteBufferHelper.getPacketName(packet)` 可以从包对象反查名字：
-
-```javascript
-const PBBH = Packages.xyz.wagyourtail.jsmacros.client.api.helper.PacketByteBufferHelper
-
-JsMacros.on("SendPacket", JavaWrapper.methodToJava((e) => {
-    // 与 e.type 等价的另一种写法
-    Chat.log(PBBH.getPacketName(e.packet))
-}))
 ```
 
 ## 取消包
@@ -128,22 +112,19 @@ JsMacros.on("SendPacket", true, JavaWrapper.methodToJava((e, context) => {
 
 ## 构造并发送自定义包
 
-`Client.createPacketByteBuffer()` 返回一个空缓冲区 helper（d.ts 原文：a helper to modify and
-send minecraft packets）。流程：写入字段 → `sendPacket(包名)`。
+`Client.createPacketByteBuffer()` 返回一个空缓冲区 helper（用于修改和发送 Minecraft 数据包）。流程：写入字段 → `sendPacket(包名)`。
 
 ```javascript
 const buf = Client.createPacketByteBuffer()
 
-// 示例：挥手包只有一个表示用哪只手的枚举字段（VarInt 编码，0 主手 / 1 副手）
-// 包名与字段格式以 getPacketNames() 和实测为准
+// 示例：挥手包只有一个表示用哪只手的枚举字段
+// 0 对应 MAIN_HAND 枚举 1对应 OFF_HAND 枚举 所有枚举类型都可以这样写入
 buf.writeVarInt(0)
 buf.sendPacket("HandSwingC2SPacket")
 ```
-
 - `sendPacket(...)`：把缓冲区内容按指定包类型构造成包**发给服务器**（serverbound 包）。
 - `receivePacket(...)`：把缓冲区内容构造成包后**让客户端当作从服务器收到的包来处理**
   （clientbound 包，适合本地模拟测试；具体行为以实测为准）。
-
 ```javascript
 // 本地伪造一条收包，测试脚本对它的反应（不会经过服务器）
 const buf2 = Client.createPacketByteBuffer()
@@ -151,13 +132,23 @@ const buf2 = Client.createPacketByteBuffer()
 buf2.receivePacket("某个S2C包名")
 ```
 
+!!! tips "另一种构建方法"
+    当然可以通过 new 一个对象来构建包, 但是不建议如果要自己创建包很麻烦。
+    ```javascript
+    const HandSwingC2SPacket = Java.type('net.minecraft.class_2879')
+    const Hand = Java.type('net.minecraft.class_1268')
+    const MainHand  = Hand.field_5808
+    const handSwingC2SPacket = new HandSwingC2SPacket(MainHand)
+    Client.sendPacket(handSwingC2SPacket)
+    ```
+
 !!! warning "字段格式必须完全正确"
     `sendPacket` / `receivePacket` / `toPacket` 都是按缓冲区当前内容反序列化出包对象，
     字段顺序、类型、个数有任何偏差，轻则抛异常，重则把错误数据发给服务器导致被踢/被封。
 
 ## PacketByteBufferHelper 方法总表
 
-以下按用途分组，全部对照 d.ts 38159–39165 行核实（均 1.8.4 加入，特别标注除外）。
+以下按用途分组（均 1.8.4 加入，特别标注除外）。
 写方法基本都返回自身，可链式调用。
 
 ### 获取与转换
@@ -233,7 +224,7 @@ buf2.receivePacket("某个S2C包名")
 | --- | --- | --- |
 | `writeBlockPos(pos)` / `writeBlockPos(x, y, z)` | `readBlockPos()` | 方块坐标，读出 `BlockPosHelper` |
 | `writeChunkPos(x, z)` / `writeChunkPos(chunk)` | `readChunkPos()` / `readChunkHelper()` | 区块坐标；前者读出 `[x, z]` 数组，后者读出 `ChunkHelper`（可能为 `null`） |
-| `writeGlobalPos(dimension, pos)` / `writeGlobalPos(dimension, x, y, z)` | —— | 带维度的全局坐标（`overworld` / `the_nether` / `the_end`），d.ts 未声明对应读取方法 |
+| `writeGlobalPos(dimension, pos)` / `writeGlobalPos(dimension, x, y, z)` | —— | 带维度的全局坐标（`overworld` / `the_nether` / `the_end`），无对应读取方法 |
 | `writeBlockHitResult(hitResultHelper)`（1.9.1） / `writeBlockHitResult(pos, direction, blockPos, missed, insideBlock)` | `readBlockHitResultHelper()`（1.9.1） | 方块命中结果（交互包常用） |
 | `writeBlockHitResult(原始对象)` | `readBlockHitResult()` / `readBlockHitResultMap()` | 已弃用，官方建议改用上一行的 1.9.1 版本 |
 
@@ -251,7 +242,7 @@ buf2.receivePacket("某个S2C包名")
 | `writeOptional(value, writer)` | `readOptional(reader)` | `java.util.Optional` 包装 |
 | `writeNullable(value, writer)` | `readNullable(reader)` | 可空值，读出值或 `null` |
 | `writeByteArray(bytes)` | `readByteArray()` / `readByteArray(maxSize)` | 字节数组；超过 maxSize 抛异常 |
-| `writeIntArray(ints)` | `readIntArray()` / `readIntArray(maxSize)` | int 数组；带 maxSize 的重载在 d.ts 里声明返回自身 |
+| `writeIntArray(ints)` | `readIntArray()` / `readIntArray(maxSize)` | int 数组；带 maxSize 的重载 |
 | `writeLongArray(longs)` | `readLongArray()` / `readLongArray(maxSize)` | long 数组 |
 
 ### 指针（索引）控制
@@ -273,7 +264,6 @@ buf2.receivePacket("某个S2C包名")
   监听 `RecvPacket` 并打印 `type` 可以搞清楚"点了按钮之后服务器到底发了什么"。
 - **抓取界面数据**：容器/交易界面的内容本质上都来自服务器发的包，在包层面能拿到
   界面渲染之前的原始数据。
-- **本地模拟测试**：用 `receivePacket` 伪造收包，不连服务器也能测脚本对某类包的反应。
 - **过滤刷屏内容**：取消特定的粒子、音效等装饰性收包（注意上面的状态不同步警告）。
 
 !!! tip "先抓包再动手"

@@ -9,6 +9,7 @@
 - **中文 + 可运行示例**：每个方法表都配能直接粘进游戏跑的示例，而不只是签名罗列。
 - **覆盖完整**：59 个事件、65 个特化实体 Helper、17 种容器子类、全部全局库，都有专门的参考页。
 - **踩坑提示**：看门狗、`joined` 阻塞、监听器残留、反作弊发包顺序等实战问题单独标注。
+- **纯静态构建**：基于 Zensical（Python），无需 Node.js，`pip install` 即可本地预览。
 
 > [!NOTE]
 > 本文档非官方维护。官方文档在 <https://jsmacros.wagyourtail.xyz/>，可配合阅读。
@@ -29,16 +30,22 @@
 
 | 页面 | 内容 |
 | --- | --- |
-| [快速开始](docs/quick_start.md) | 安装、开发环境、运行方式、fork/joined、看门狗 |
-| [API 总览](docs/api_overview.md) | 16 个全局库的职责地图与任务索引 |
+| [API 总览](docs/api_overview.md) | 全局库的职责地图与任务索引 |
 | [脚本模板](docs/script_template.md) | 通用模板逐段讲解 + 监听器型/服务型变体 |
 | [脚本上下文](docs/script_context.md) | 线程模型、`context`/`event`/`file`、僵尸脚本原理 |
-| [事件系统](docs/events.md) | `on`/`once`/`off`/`waitForEvent`、joined、自定义事件 |
-| [事件参考](docs/events_reference.md) | 全部 59 个事件的字段与可取消性 |
-| [事件过滤器](docs/event_filters.md) | `eventFilters()` 工厂与 Java 侧过滤 |
-| [服务脚本](docs/services.md) | 常驻脚本的生命周期与规范模板 |
-| [常用类型](docs/types.md) | Helper 包装哲学、JS/Java 类型互转 |
+| [常用类型](docs/types.md) | Helper 包装、JS/Java 类型互转 |
 | [语言扩展](docs/extensions.md) | 使用 JS 以外的语言 |
+
+</details>
+
+<details>
+<summary>事件系统</summary>
+
+| 页面 | 内容 |
+| --- | --- |
+| [事件系统](docs/events.md) | `on`/`once`/`off`/`waitForEvent`、joined、自定义事件 |
+| [事件参考](docs/events_reference.md) | 全部 59 个事件的名称/参数/方法速查表 |
+| [服务脚本](docs/services.md) | 常驻脚本的生命周期与规范模板 |
 
 </details>
 
@@ -61,7 +68,7 @@
 | [实体](docs/entities.md) | EntityHelper 继承链、类型转换、状态效果、村民交易 |
 | [实体参考](docs/entities_reference.md) | 65 个特化实体 Helper 全方法表 |
 | [位置与向量](docs/position.md) | Pos/Vec/BlockPos 互转与实用几何 |
-| [键盘输入](docs/keybind.md) | 按键状态与模拟按键 |
+| [键盘与鼠标输入](docs/keybind.md) | 按键状态与模拟按键 |
 | [HUD 渲染](docs/hud.md) | Draw2D/Draw3D/Surface、全部渲染元素 |
 | [自定义图像](docs/custom_image.md) | CustomImage 内存位图绘制与纹理注册 |
 | [脚本屏幕](docs/screen.md) | ScriptScreen 自定义 GUI 与控件 |

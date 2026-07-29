@@ -13,7 +13,6 @@ icon: lucide/wifi
 
 ## Request 命名空间总览
 
-以下方法均已对照 `JsMacros-2.1.0.d.ts` 核实：
 
 | 方法 | 返回 | 说明 |
 | --- | --- | --- |
@@ -249,3 +248,118 @@ connect()
     WebSocket 需要脚本一直活着才能收到回调。一次性脚本跑完主体就可能被回收，
     建议把长连接脚本注册成[服务](services.md)，随游戏启动、可手动开关，
     停止时置 `stopped = true` 并调用 `ws.close()`。
+
+## 实例
+这是一个简易的网络锁, 当然使用也可以直接在客户端里面用全局变量制作Lock
+``` python
+import http.server
+import socketserver
+import threading
+import json
+from urllib.parse import urlparse, parse_qs
+
+meta_lock = threading.Lock()
+
+# 结构: { lock_id: { "lock": threading.Lock(), "holder": client_id } }
+locks_db = {}
+
+class LockHandler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        self.handle_request()
+
+    def do_POST(self):
+        self.handle_request()
+
+    def handle_request(self):
+        parsed = urlparse(self.path)
+        path = parsed.path
+        query = parse_qs(parsed.query)
+
+        client_id = query.get('client', ['unknown'])[0]
+        lock_id = query.get('lock_id', ['default'])[0]
+
+        if path == '/acquire':
+            with meta_lock:
+                if lock_id not in locks_db:
+                    locks_db[lock_id] = {
+                        "lock": threading.Lock(),
+                        "holder": None
+                    }
+                target_lock = locks_db[lock_id]["lock"]
+
+            if target_lock.acquire(blocking=False):
+                with meta_lock:
+                    locks_db[lock_id]["holder"] = client_id
+                
+                print(f"[LOCK] 锁 '{lock_id}' 已被客户端 '{client_id}' 占用")
+                self._send_json({
+                    'success': True, 
+                    'message': f"Lock '{lock_id}' acquired by {client_id}"
+                })
+            else:
+                with meta_lock:
+                    holder = locks_db[lock_id]["holder"]
+                self._send_json({
+                    'success': False, 
+                    'message': f"Lock '{lock_id}' is already held by {holder}"
+                }, 423)
+
+        elif path == '/release':
+            success = False
+            message = ""
+            code = 200
+
+            with meta_lock:
+                if lock_id in locks_db:
+                    target_lock = locks_db[lock_id]["lock"]
+                    holder = locks_db[lock_id]["holder"]
+
+                    if holder == client_id:
+                        target_lock.release()
+                        locks_db[lock_id]["holder"] = None
+                        success = True
+                        message = f"Lock '{lock_id}' released by {client_id}"
+                    else:
+                        code = 403
+                        message = f"Not the owner of lock '{lock_id}' (Held by: {holder})"
+                else:
+                    code = 404
+                    message = f"Lock '{lock_id}' does not exist"
+
+            self._send_json({'success': success, 'message': message}, code)
+
+        elif path == '/status':
+            with meta_lock:
+                lock_info = locks_db.get(lock_id)
+                if lock_info:
+                    status = {
+                        'lock_id': lock_id,
+                        'locked': lock_info["lock"].locked(),
+                        'holder': lock_info["holder"]
+                    }
+                else:
+                    status = {
+                        'lock_id': lock_id,
+                        'locked': False,
+                        'holder': None
+                    }
+            self._send_json(status)
+
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+    def _send_json(self, data, code=200):
+        self.send_response(code)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode())
+
+def run_server(port=8123):
+    with socketserver.ThreadingTCPServer(("", port), LockHandler) as httpd:
+        print(f"网络锁服务器已启动 → http://localhost:{port}")
+        httpd.serve_forever()
+
+if __name__ == "__main__":
+    run_server()
+```

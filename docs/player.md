@@ -6,12 +6,9 @@ icon: lucide/angry
 
 `Player` 是 JsMacros 的全局库之一，负责一切"与你自己这个玩家有关"的操作：获取玩家对象、读写游戏模式、准心射线检测、写告示牌、截图、统计信息，以及往游戏里注入移动输入。
 
-!!! note "2.x 推荐"
-    读取玩家信息用 `Player.getPlayer()`；攻击、交互、挖掘等动作优先用 `Player.getInteractionManager()` 或 `Player.interactions()`。旧的 `player.attack()`、`player.interactBlock()` 等方法还能在类型里看到，但已迁移到[交互管理器](interaction.md)。
-
 本页内容：
 
-- 新手教程：获取玩家对象、攻击、交互（保留旧写法讲解，方便读懂旧脚本）
+- 新手教程：获取玩家对象、攻击、交互
 - `Player` 全局库全部函数参考（分组表）
 - `ClientPlayerEntityHelper` 完整参考（`getPlayer()` 返回的类型）
 - `PlayerEntityHelper`、`PlayerAbilitiesHelper` 方法表
@@ -65,10 +62,6 @@ const playerName = player.getName().getString()
         Chat.log(playerName)方法可以输出文本到屏幕。
 
 ## 攻击
-
-!!! warning "旧写法说明"
-    本节保留 `player.attack()` 的教程写法，方便读懂旧脚本。新脚本建议改用 [交互管理器](interaction.md)：`Player.interactions().attack()` 或 `Player.interactions().attack(entity)`。
-
 ### attack()
 
 ```javascript
@@ -109,16 +102,10 @@ player.attack(targetEntity)
         }
         ```
         这里使用了一个死循环, 每隔100ms就对距离玩家4.5格以内的第一个`zombie`实体进行攻击。
-        
-        注: "第一个"并不是最近的一个, 如果需要获取最近的，需要排序，后面会教
-
-        死循环无法退出，需要去jsmacros模组菜单里点左下角"正在运行"然后点×关掉
-        后面会教如何使用按键开关脚本
+        注: "第一个"并不是最近的一个, 如果需要获取最近的，需要排序
 
 ## 交互
 
-!!! warning "旧写法说明"
-    `player.interact()`、`player.interactEntity()`、`player.interactBlock()`、`player.interactItem()` 已迁移到 `Player.getInteractionManager()`。新脚本优先写 `Player.interactions().interactBlock(...)`。
 
 ### interact()
 
@@ -139,21 +126,46 @@ player.interactEntity(targetEntity, false)
 
 使用`interactEntity(entity, offHand)`方法可以与指定实体进行交互。
 
-`offHand`参数是控制交互用的左右手的, 左手为true, 右手为false。
+`offHand`参数是控制交互用的左右手的, 副手为true, 主手为false。
 !!! warning "注意反作弊"
     此方法会产生原版不可能发生的发包——即使你交互的村民在你的交互距离内，并且你正看着它，使用此方法交互也会让你被反作弊检测到！
 
-    1. 用右手交互，会被检测 (GrimAC-PacketOrderC) 因为这个方法少发了 InteractAt 包 (1.8+)
+    1. 用主手交互，会被检测 (GrimAC-PacketOrderC) 因为这个方法少发了 InteractAt 包 (1.8+)
 
-    2. 如果直接使用左手交互，则问题更大。在报PacketOrderC的同时还会报PacketOrderD (1.9+)
+    2. 如果直接使用副手交互，则问题更大。在报PacketOrderC的同时还会报PacketOrderD (1.9+)
 
-        ^^GrimAC-PacketOrderD：对于 1.9+ 客户端 如果副手交互发生，通常意味着主手交互已经发生。但这个方法漏发了主手交互包^^
+        ^^GrimAC-PacketOrderD：对于 1.9+ 客户端 如果副手交互发生，通常意味着主手交互已经发生。但这个方法漏发了主手交互包^ ^
 
     所以在有反作弊的服请谨慎使用此方法！
     可以替换为转头到目标实体, 然后用`interact()`方法进行交互。(当然 转头要是写不好也会被检测到就是了)
+### interactAt(entity)
 
-    ==本提示只会出现在这种JsMacros的方法本身有隐藏问题的地方。在其他明显会被反作弊检测到的方法或实例中不会出现==
+```javascript
+const Hand = Java.type('net.minecraft.class_1268')
+const MAIN_HAND = Hand.field_5808
+const EntityHitResult = Java.type('net.minecraft.class_3966')
 
+function interactAtEntity(entity) {
+    const entityHitResult = new EntityHitResult(entity.getRaw())
+    const player = Player.getPlayer()
+    const imr = Player.getInteractionManager().getRaw()
+    imr.method_2917(player.getRaw(), entity.getRaw(), entityHitResult, MAIN_HAND)
+}
+```
+
+> **非包装方法** 基于 1.21.11
+>
+> JsMacros 目前未提供对应的包装 API，因此需要通过底层 Minecraft 方法实现。该方法属于原版客户端内部调用方式，使用 Yarn 映射名称，未来 Minecraft 或 JsMacros 更新后，方法名或参数可能发生变化。
+
+该方法会模拟一次带有 **命中位置（Hit Result）** 的实体交互，对应客户端的 `interactAt` 操作。
+
+当普通的 `interact(entity)` 无法触发服务器逻辑时，可以尝试使用 `interactAt(entity)`。部分插件或服务器只监听 `PlayerInteractAtEntityEvent`，而不是 `PlayerInteractEntityEvent`，因此只有 `interactAt` 才能正常触发对应的功能。
+
+> **注意**
+>
+> - `interactAt` 并不能保证一定成功，最终是否生效仍取决于服务器实现。
+> - 许多服务器会进行射线检测或反作弊校验，如果玩家没有朝向目标、距离过远，或目标实际上不可交互，即使发送了 `interactAt` 数据包，也可能被服务器忽略。
+> - 建议在调用前确保玩家正在注视目标，并处于正常的交互距离内，以提高成功率。
 ### interactBlock(x, y, z, direction, offHand)
 
 使用`interactBlock(x, y, z, direction, offHand)`方法可以与指定方块进行交互。
@@ -183,39 +195,19 @@ player.interactBlock(0, -61, 0, 'up', false)
 
 哇，他居然在空中放了一个方块，把`(0, -57, 0)`的空气变成了你手上拿的方块！
 
-??? question "Why?"
-    好奇怪欸，刚刚我们与`y=-61`的草方块顶面交互，他在`y=-60`处放了方块
-
-    为什么现在我们与`y=-57`的空气交互，他就在原位`y=-57`处放了方块？
-
-    好问题！这是因为空气是可被替换的方块！为便于你理解，你可以现在在草地上撒骨粉。草也是可被替换的方块，你现在拿着方块对准刚刚长出的草，按右键
-    !!! success "wow!"
-        wow！草的位置直接被替换为了手上的方块！
-
-        没错。空气也是如此。现在知道为啥我们与`y=-57`的空气交互，他就在原位`y=-57`处放了方块了吧！
-
-    你可以再次验证：你现在不改脚本，回到刚刚放的方块边上，再运行一次脚本。
-
-    脚本会和`(0, -57, 0)`的你刚刚放的方块的顶面交互
-
-    然后你手上的方块就会被放到`(0, -56, 0)`的位置！
-
-    在此间你根本没有改变脚本内容。但脚本的两次执行却带来了不同的结果。
-
-    在以后的写脚本旅途中你一定会遇到类似这样的情况。**理解这样的问题本质，很有利于你以后的debug！**
-
 !!! question "种树光环"
     制作一个种树光环, 让玩家自动与旁边的草方块交互进行种树。
     需要方法:
-    > `Player.getPlayer()` 方法可以获取到玩家对象。
-
-    > `World.findBlocksMatching("minecraft:grass_block", 1)` 方法可以获取到玩家所在区块以及周围一圈区块内的所有草方块。
-
-    > `Player.getPlayer().getBlockPos().distanceTo(block)` 方法可以获取到方块与玩家的距离。
-
-    > `player.interactBlock(x, y, z, direction, offHand)` 方法可以与指定方块进行交互。
-
-    > `Time.sleep(100)` 方法可以让程序暂停100ms。
+    方法可以获取到玩家对象。
+    > `Player.getPlayer()` 
+    方法可以获取到玩家所在区块以及周围一圈区块内的所有草方块。
+    > `World.findBlocksMatching("minecraft:grass_block", 1)` 
+    方法可以获取到方块与玩家的距离。
+    > `Player.getPlayer().getBlockPos().distanceTo(block)` 
+    方法可以与指定方块进行交互。
+    > `player.interactBlock(x, y, z, direction, offHand)` 
+    方法可以让程序暂停100ms。
+    > `Time.sleep(100)` 
     
     ???- tip "答案"
         ``` javascript
@@ -428,7 +420,6 @@ if (!hit.isMissed()) {
 
 ```javascript
 const player = Player.getPlayer()
-if (!player) return
 
 const input = Player.createPlayerInput(1, 0, player.getYaw())
 for (let i = 0; i < 20; i++) {
@@ -445,10 +436,14 @@ Player.clearInputs()
 快捷方法（`yaw` 为**相对**当前朝向的角度，一次只加一步）：
 
 ```javascript
-Player.moveForward(0)      // 朝当前方向前进一步
-Player.moveBackward(0)     // 后退一步
-Player.moveStrafeLeft(0)   // 左横移一步
-Player.moveStrafeRight(0)  // 右横移一步
+// 朝当前方向前进一步
+Player.moveForward(0)     
+ // 后退一步 
+Player.moveBackward(0)    
+// 左横移一步
+Player.moveStrafeLeft(0)   
+// 右横移一步
+Player.moveStrafeRight(0)  
 ```
 
 ### 预测：先算后走
@@ -457,7 +452,6 @@ Player.moveStrafeRight(0)  // 右横移一步
 
 ```javascript
 const player = Player.getPlayer()
-if (!player) return
 
 const input = Player.createPlayerInput(1, 0, player.getYaw())
 const predicted = Player.predictInput(input)
@@ -471,36 +465,34 @@ const inputs = []
 for (let i = 0; i < 20; i++) {
     inputs.push(Player.createPlayerInput(1, 0, Player.getPlayer().getYaw()))
 }
-const path = Player.predictInputs(inputs, true) // true = 可视化
+// 必须开启才能看见
+Player.setDrawPredictions(true)
+// true = 可视化绘制
+const path = Player.predictInputs(inputs, true) 
 Chat.log(`20 tick 后大约到达: ${path[path.length - 1]}`)
 ```
-
+![](https://img.mynotes.world//202607291453119.png)
 `setDrawPredictions(true/false)` 可以全局开关这个可视化。
 
 ### 批量创建：CSV 与 JSON
 
 ```javascript
-// CSV：第一行是表头（大小写敏感），之后每行一个 tick 的输入
+// CSV：第一行是表头（大小写敏感），之后每行一个 tick 的输入 字段参考前面的PlayerInput字段就行了
 const inputs = Player.createPlayerInputsFromCsv(
     "movementForward, movementSideways, yaw\n" +
-    "1, 0, 0\n" +
-    "1, 0, 45\n" +
+    "1, 0, 90\n" +
+    "1, 0, 90\n" +
     "1, 0, 90"
 )
+const player = Player.getPlayer()
 for (const input of inputs) {
+    player.lookAt(input.yaw, input.pitch)
     Player.addInput(input)
 }
 
 // JSON：键名同样大小写敏感
 const single = Player.createPlayerInputsFromJson('{"movementForward": 1, "yaw": 90, "jumping": true}')
 Player.addInput(single)
-```
-
-`getCurrentPlayerInput()` 能把你此刻的真实按键抓成一个 `PlayerInput`，配合 `toString(true)`（JSON）/`toString(false)`（CSV）可以做"录制—回放"：
-
-```javascript
-const now = Player.getCurrentPlayerInput()
-Chat.log(now.toString(true)) // 以 JSON 形式打印当前输入
 ```
 
 !!! question "跳跃前进"
@@ -516,7 +508,6 @@ Chat.log(now.toString(true)) // 以 JSON 形式打印当前输入
     ???- tip "答案"
         ```javascript
         const player = Player.getPlayer()
-        if (!player) return
         const yaw = player.getYaw()
 
         for (let i = 0; i < 10; i++) {
@@ -556,8 +547,10 @@ Chat.log(now.toString(true)) // 以 JSON 形式打印当前输入
 
 ```javascript
 const stats = Player.getStatistics()
-stats.updateStatistics()   // 请求服务器刷新
-Time.sleep(1000)           // 稍等数据回来
+// 请求服务器刷新
+stats.updateStatistics()   
+// 稍等数据回来
+Time.sleep(1000)           
 
 Chat.log(`击杀苦力怕: ${stats.getEntityKilled("minecraft:creeper")}`)
 Chat.log(`挖掘石头: ${stats.getBlockMined("minecraft:stone")}`)
@@ -589,11 +582,11 @@ ClientPlayerEntityHelper → PlayerEntityHelper → LivingEntityHelper → Entit
 
 ```javascript
 const player = Player.getPlayer()
-if (!player) return
-
-player.lookAt(0, -60, 0)        // 看向坐标
+// 看向坐标
+player.lookAt(0, -60, 0)        
 Time.sleep(200)
-player.turnBack()               // 转身
+// 转身
+player.turnBack()               
 Time.sleep(200)
 if (player.tryLookAt(0, -61, 0)) {
     Chat.log("准心已对准方块，可以放心交互")
@@ -667,7 +660,7 @@ if (cd > 0) {
 
 ### 已迁移到交互管理器的旧方法
 
-下面这些方法在 2.1.0 中仍然可用（本页教程也在用），但类型定义里都标了"已迁移"。写新脚本请用右列的写法，详见[交互管理器](interaction.md)：
+下面这些方法仍然可用（本页教程也在用），但类型定义里都标了"已迁移"。写新脚本请用右列的写法，详见[交互管理器](interaction.md)：
 
 | 旧方法（`player.` 上） | 新写法（`Player.interactions().` 上） |
 | --- | --- |
@@ -706,8 +699,6 @@ if (cd > 0) {
 
 ```javascript
 const player = Player.getPlayer()
-if (!player) return
-
 Chat.log(`等级 ${player.getXPLevel()}，升级还差 ${player.getXPToLevelUp()} 经验`)
 
 // 满蓄力才攻击（PVP常用）
@@ -768,7 +759,6 @@ Chat.log(`正在飞行: ${abilities.getFlying()}，飞行速度: ${abilities.get
 
 ```javascript
 const player = Player.getPlayer()
-if (!player) return
 
 Chat.log(player.getPlayerName())
 Chat.log(`${player.getX().toFixed(1)}, ${player.getY().toFixed(1)}, ${player.getZ().toFixed(1)}`)
@@ -776,10 +766,3 @@ Chat.log(`血量: ${player.getHealth()} / ${player.getMaxHealth()}`)
 Chat.log(`饥饿: ${player.getFoodLevel()}  经验等级: ${player.getXPLevel()}`)
 Chat.log(`潜行: ${player.isSneaking()}  疾跑: ${player.isSprinting()}`)
 ```
-
-## 相关页面
-
-- [交互管理器](interaction.md)——攻击、挖掘、交互的新写法
-- [实体](entities.md)——`EntityHelper` / `LivingEntityHelper` 完整方法
-- [背包](inventory.md)——`Player.openInventory()` 返回的 `Inventory` 用法
-- [位置与向量](position.md)——`PositionCommon`、`Pos3D`、`BlockPosHelper` 详解

@@ -4,7 +4,7 @@ icon: lucide/power
 
 # 服务脚本
 
-服务（Service）是 JsMacros 的"常驻后台脚本"：随客户端启动自动运行，长期挂在后台，靠副作用工作——HUD 信息面板、聊天监听、自动重连、后台统计都属于这一类。d.ts 里对服务的官方定义是：
+服务（Service）是 JsMacros 的"常驻后台脚本"：随客户端启动自动运行，长期挂在后台，靠副作用工作——HUD 信息面板、聊天监听、自动重连、后台统计都属于这一类。服务的官方定义是：
 
 > services are background scripts designed to run full time and are mainly noticed by their side effects.
 > （服务是设计为全程运行的后台脚本，主要通过副作用体现存在。）
@@ -20,44 +20,59 @@ icon: lucide/power
 - **单实例**：同名服务同时只有一个实例在跑，重复启动无效，改用重启（restart）；
 - **专属事件**：服务脚本的全局变量 `event` 是 `Events.Service` 类型，提供停止回调和自动清理能力（这是服务脚本和普通脚本最大的 API 差异）。
 
-## 服务 vs 按键/事件宏
-
-| | 按键/事件宏 | 服务 |
-| --- | --- | --- |
-| 启动方式 | 按键、事件触发 | 游戏启动自动 / GUI 手动 / `ServiceManager` |
-| 生命周期 | 跑完即走（除非挂了监听器） | 常驻后台，直到被停止 |
-| 实例 | 每次触发新开一个线程实例 | 同名服务只有一个实例 |
-| 全局 `event` | `Events.Key`、`Events.RecvMessage` 等 | `Events.Service` |
-| 停止 | 自然结束 / GUI 停止 | `stopService` / GUI，停止时有收尾回调 |
-| 典型用途 | 一键宏、临时操作 | HUD、聊天监听、自动重连、后台统计 |
-
-!!! tip "怎么选"
-    只要脚本里出现了 `JsMacros.on(...)` 常驻监听或者注册了 HUD，它本质上就是常驻脚本——那就把它做成服务，享受服务的启停管理和自动清理，而不是靠按键宏"跑一次挂一堆监听器"。
-
 ## 服务的生命周期
 
-1. **注册**：在 GUI 的 Services 标签页添加，或用 `ServiceManager.registerService(name, path)`（路径相对宏文件夹）；
-2. **启用/禁用**：启用（enabled）表示随游戏启动自动运行，会写进配置；禁用则只能手动启动。启用与"正在运行"是两个独立状态；
-3. **启动**：游戏启动自动拉起已启用的服务，或 `startService(name)` 手动启动；
-4. **运行**：脚本从头执行；只要设置过 `unregisterOnStop`，即使代码跑到最后一行服务也不会自行结束（d.ts 原文：*If anything was set to unregister, the service won't stop by itself even if it reaches the end*）；
-5. **停止**：`stopService(name)`、GUI 停止或游戏退出，触发四步收尾流程（顺序来自 d.ts）：
+1. **注册**：在 GUI 的 **Services** 标签页添加，或使用 `ServiceManager.registerService(name, path)` 注册。
+2. **启用**：启用（Enabled）表示游戏启动时自动启动；启用与运行中（Running）是两个独立状态。
+3. **启动**：游戏启动自动启动已启用的服务，或通过 `ServiceManager.startService(name)` 手动启动。
+4. **运行**：脚本从头开始执行。默认情况下脚本结束后服务会停止；调用 `event.unregisterOnStop(...)` 后，服务会保持运行，直到手动停止、重新加载脚本或退出游戏。
+5. **停止**：通过 `stopService()`、GUI 停止、重新加载脚本或退出游戏触发，并按以下顺序执行：
 
 ```
-执行 stopListener → 注销事件监听（offEvents 为 true 时）→ unregister 登记的对象 → 执行 postStopListener
+stopListener
+    ↓
+（可选）注销事件监听（offEvents=true）
+    ↓
+注销 unregisterOnStop() 登记的对象
+    ↓
+postStopListener
 ```
+
+- **stopListener**：停止流程开始时执行，适合保存数据、释放资源等。
+- **unregisterOnStop(...)**：自动注销事件监听和 `Registrable` 对象，并使服务在脚本结束后保持运行。
+- **postStopListener**：所有自动注销完成后执行，适合最后的收尾工作。
 
 !!! note "文件一改，服务自动重启"
-    2.1.0 的服务管理器自带"文件变更重载"：服务脚本文件被修改保存后，服务会自动重启，非常适合边写边调。不想要这个行为，可以对单个服务 `disableReload(name)`，或整体 `stopReloadListener()`（恢复用 `startReloadListener()`）。
+    服务管理器自带"文件变更重载"：服务脚本文件被修改保存后，服务会自动重启，非常适合边写边调。不想要这个行为，可以对单个服务 `disableReload(name)`，或整体 `stopReloadListener()`（恢复用 `startReloadListener()`）。
+### stopListener 与 postStopListener
 
+需要在停止时做额外的事（存档、发通知、断开连接），用两个回调字段：
+
+```javascript
+JsMacros.assertEvent(event, "Service")
+
+event.stopListener = JavaWrapper.methodToJava(() => {
+    Chat.log("服务即将停止, 先把数据写盘...")
+    // 此时事件监听还没被注销, 资源还没被 unregister, 自己手动进行注销
+    // .......
+})
+
+// 整个停止流程的最后一步
+event.postStopListener = JavaWrapper.methodToJava(() => {
+    Chat.log("收尾完毕") 
+})
+```
+
+!!! tips "小提示"
+    stopListener 和 unregisterOnStop 可以同时使用, 但是好像没有什么必要 = =。
 ## 规范的服务脚本模板
-
-这是本页最重要的部分。一个规范的服务脚本 = **注册资源 + 登记自动清理 + （可选）收尾回调**，三件事缺一不可，否则停止服务后会留下"幽灵监听器"和残留 HUD。
 
 ```javascript
 // 一个规范的服务脚本模板: 显示坐标 HUD + 监听聊天
-JsMacros.assertEvent(event, "Service") // 断言事件类型, TS 下还能获得补全
+// 断言事件类型, TS 下还能获得补全
+JsMacros.assertEvent(event, "Service") 
 
-// ---- 1. 注册资源 ----
+// 注册资源 
 const hud = Hud.createDraw2D()
 const text = hud.addText("服务启动中...", 10, 10, 0xFFFFFF, true)
 hud.register()
@@ -74,12 +89,12 @@ const chatListener = JsMacros.on("RecvMessage", JavaWrapper.methodToJava((e) => 
     }
 }))
 
-// ---- 2. 登记自动清理 ----
+// 登记自动清理 
 // offEvents = true: 停止时自动注销本服务注册的所有事件监听器(tickListener、chatListener)
 // 后面的可变参数: 停止时自动 unregister 的对象(Draw2D、Draw3D、CommandBuilder 等)
 event.unregisterOnStop(true, hud)
 
-// ---- 3. (可选)收尾完成后的回调 ----
+// 收尾完成后的回调 
 event.postStopListener = JavaWrapper.methodToJava(() => {
     Chat.log(`[${event.serviceName}] 已停止, 资源已全部清理`)
 })
@@ -89,41 +104,14 @@ Chat.log(`[${event.serviceName}] 已启动`)
 
 把它保存成 `services/my_hud.js`，在 GUI 的 Services 标签页注册并启动，就是一个可以随意启停、不留垃圾的服务。
 
-关于 `unregisterOnStop(offEvents, ...list)` 的几个细节（均来自 d.ts JSDoc）：
-
-- `offEvents` 为 `true` 时，服务管理器会在停止时清掉本上下文注册的事件监听器——所以监听器**不需要**（也不能）塞进后面的参数列表，那里只收 `Registrable` 对象（Draw2D、Draw3D、CommandBuilder 等）；
-- **多次调用只保留最后一次**，把要清理的对象一次性传全；
-- `event.unregisterOnStop(false, d2d)` 的效果等价于 `event.stopListener = JavaWrapper.methodToJava(() => d2d.unregister())`；
-- 调用过它之后，脚本跑到末尾服务也会保持存活——这正是服务想要的。
-
-!!! warning "旧教程的常见错误"
-    网上一些旧例子写 `context.unregisterOnStop(...)`——这个方法在 `event`（`Events.Service`）上，不在 `context` 上；另外把监听器对象直接塞进参数列表也是错的，注销监听靠的是第一个参数 `offEvents = true`。
-
-### 手动收尾：stopListener 与 postStopListener
-
-需要在停止时做额外的事（存档、发通知、断开连接），用两个回调字段：
-
-```javascript
-JsMacros.assertEvent(event, "Service")
-
-event.stopListener = JavaWrapper.methodToJava(() => {
-    Chat.log("服务即将停止, 先把数据写盘...")
-    // 此时事件监听还没被注销, 资源还没被 unregister
-})
-
-event.postStopListener = JavaWrapper.methodToJava(() => {
-    Chat.log("收尾完毕") // 整个停止流程的最后一步
-})
-```
-
-!!! warning "stopListener 和 unregisterOnStop 二选一"
-    d.ts 明确说 `unregisterOnStop` 等价于设置 `stopListener`，且重复设置会相互覆盖。所以：**要么**自己写 `stopListener` 手动清理一切，**要么**用一次 `unregisterOnStop` 全权托管；两条路都想走的话，把额外收尾逻辑放进 `postStopListener`（它是独立字段，始终在流程最后执行）。
+!!! warning "常见错误"
+    把监听器对象直接塞进参数列表是错的，注销监听靠的是第一个参数 `offEvents = true`。
 
 ## 用 ServiceManager 管理服务
 
 入口是 `JsMacros.getServiceManager()`，返回 `ServiceManager`。它让你**用脚本管理其他服务**——比如写一个"看门狗"脚本确保关键服务在线。
 
-### 方法全表
+### 服务管理方法
 
 注册与配置：
 
@@ -171,7 +159,7 @@ event.postStopListener = JavaWrapper.methodToJava(() => {
 
 ### ServiceStatus 枚举
 
-`status(name)` 把"是否启用"和"是否运行"合成一个值（含义来自 d.ts JSDoc）：
+`status(name)` 把"是否启用"和"是否运行"合成一个值：
 
 | 值 | 已启用? | 在运行? |
 | --- | --- | --- |
@@ -205,7 +193,8 @@ const manager = JsMacros.getServiceManager()
 const critical = "chat_logger"
 
 if (manager.getServices().contains(critical) && !manager.isRunning(critical)) {
-    const prev = manager.startService(critical) // 返回启动前的状态
+    // 返回启动前的状态
+    const prev = manager.startService(critical) 
     Chat.log(`已拉起 ${critical} (之前状态: ${prev})`)
 }
 ```
@@ -215,7 +204,8 @@ if (manager.getServices().contains(critical) && !manager.isRunning(critical)) {
 ```javascript
 const manager = JsMacros.getServiceManager()
 if (manager.registerService("my_hud", "services/my_hud.js", true)) {
-    manager.save() // 写入配置, 下次启动游戏依然存在
+    // 写入配置, 下次启动游戏依然存在
+    manager.save() 
     manager.startService("my_hud")
 } else {
     Chat.log("同名服务已存在")
@@ -224,7 +214,7 @@ if (manager.registerService("my_hud", "services/my_hud.js", true)) {
 
 ## Service 事件的全局变量空间
 
-`Events.Service` 除了停止回调，还带一整套**全局变量空间**读写方法（共 18 个）。它和 `GlobalVars` 库操作的是**同一个空间**（d.ts 里两者 JSDoc 措辞完全一致）：数据在整个游戏会话期间一直存在，**服务停了再启、脚本重载都不清空**，游戏关闭才消失——这正是服务保存"跨启停状态"的标准位置。
+`Events.Service` 除了停止回调，还带一整套**临时变量空间**, 存储在EventService里面的  `protected Map<String, Object> args = new ConcurrentHashMap<>();` 生命周期就是服务的生命周期。
 
 | 分类 | 方法 | 说明 |
 | --- | --- | --- |
@@ -235,62 +225,51 @@ if (manager.registerService("my_hud", "services/my_hud.js", true)) {
 | 布尔 | `toggleBoolean(name)` | 翻转并返回新值 |
 | 管理 | `remove(key)` / `getRaw()` | 删除键 / 拿到底层 `JavaMap<string, any>` |
 
-跨启停示例——统计服务本次游戏会话里被（重）启动了几次：
+计数器实例-跨脚本通信：
 
 ```javascript
-JsMacros.assertEvent(event, "Service")
-
-const KEY = `${event.serviceName}:starts` // 键名加服务前缀, 避免和别的服务撞车
-if (event.getInt(KEY) === null) event.putInt(KEY, 0)
-
-const n = event.incrementAndGetInt(KEY)
-Chat.log(`[${event.serviceName}] 本会话第 ${n} 次启动`)
+JsMacros.assertEvent(event, 'Service')
+let count = 0
+while (true) {
+    count++
+    event.putInt('count', count)
+    Chat.log(`计数器更新: ${count}`)
+    Client.waitTick(20)
+}
 ```
 
-其他脚本可以直接用 `GlobalVars` 读到同一份数据：
+其他脚本可以读到数据：
 
 ```javascript
-Chat.log(`my_hud 启动次数: ${GlobalVars.getInt("my_hud:starts")}`)
+// 获取smr管理服务
+const smr = JsMacros.getServiceManager()
+// 这里需要为服务名称 --> 实际获取的值就是eventService变量
+const exampleEventService = smr.getServiceData('example')
+const count = exampleEventService.getInt('count')
+Chat.log(`example 计时器值为: ${count}`)
 ```
 
-!!! tip "要跨游戏重启? 写文件"
-    全局变量空间只活一个游戏会话。需要真正持久化的配置，用 `FS` 存 JSON：
+!!! tip "变量是全局的吗?"
+    变量存储在当前 **EventService 对象** 的数据空间中。
+    同一个服务中的其他脚本可以通过 `ServiceManager.getServiceData(name)` 获取该 `EventService` 对象，并读取其中的数据。
 
-    ```javascript
-    const configPath = "my_service/config.json"
-    if (!FS.exists(configPath)) {
-        FS.createFile("my_service", "config.json", true) // 第三个参数: 自动创建目录
-        FS.open(configPath).write(JSON.stringify({ enabled: true }, null, 2))
-    }
-    const config = JSON.parse(FS.open(configPath).read())
-    ```
+## 轮询循环的正确写法
 
-## 常见坑
-
-| 坑 | 处理 |
-| --- | --- |
-| 停止服务后 HUD 还在 | `event.unregisterOnStop(true, hud)`，注意是 `event` 不是 `context` |
-| 停止服务后监听器还在触发 | `unregisterOnStop` 第一个参数传 `true`；或在 `stopListener` 里手动 `JsMacros.off(listener)` |
-| 改文件后监听器越叠越多 | 文件变更会自动**重启**服务，只要做好了停止清理就不会叠加；没做清理才会残留 |
-| `while(true)` 停不下来 | 见下方"轮询循环的正确写法" |
-| 多个服务共享状态互相覆盖 | 全局变量空间键名加服务前缀，如 `"my_hud:xxx"` |
-| `getServiceData(name)` 抛异常 | 服务没在运行时可能抛，先 `isRunning(name)` 判断 |
-
-### 轮询循环的正确写法
-
-服务里能用事件监听就不要 `while(true)`（轮询 Tick 请直接 `JsMacros.on("Tick", ...)` 配合[事件过滤器](event_filters.md)的 `modulus` 降频）。确实要写循环时，**必须有退出条件**，并且每轮交出控制权：
+服务里能用事件监听就不要 `while(true)`（轮询 Tick 请直接 `JsMacros.on("Tick", ...)`, 确实要写循环时，**必须有退出条件**，并且每轮交出控制权：
 
 ```javascript
 JsMacros.assertEvent(event, "Service")
 
 let running = true
 event.stopListener = JavaWrapper.methodToJava(() => {
-    running = false // 通知循环优雅退出
+    // 通知循环优雅退出
+    running = false
 })
 
 while (running) {
     // ...每轮要做的事...
-    Client.waitTick() // 交出控制权, 也给 stopListener 执行的机会
+    // 交出控制权, 也给 stopListener 执行的机会
+    Client.waitTick() 
 }
 Chat.log("循环退出, 服务结束")
 ```

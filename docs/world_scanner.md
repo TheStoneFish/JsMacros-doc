@@ -25,7 +25,7 @@ const found = scanner.scanAroundPlayer(2)
 Chat.log(`附近钻石矿: ${found.size()} 个`)
 ```
 
-d.ts 里的官方例子——"朝南、不需要工具、硬度不超过 10、名字含 chest 或 barrel 的方块"：
+朝南、不需要工具、硬度不超过 10、名字含 chest 或 barrel 的方块：
 
 ```javascript
 const scanner = World.getWorldScanner()

@@ -29,14 +29,14 @@ BlockDataHelper（世界中 (x, y, z) 处的那个方块）
 
 | 来源 | 得到的类型 | 说明 |
 | --- | --- | --- |
-| `World.getBlock(x, y, z)` / `World.getBlock(pos)` | `BlockDataHelper \| null` | 最常用入口，区块未加载时返回 `null` |
+| `World.getBlock(x, y, z)` / `World.getBlock(pos)` | `BlockDataHelper | null` | 最常用入口，区块未加载时返回 `null` |
 | `World.iterateSphere(...)` / `World.iterateBox(...)` | 回调收到 `BlockDataHelper` | 遍历一片区域 |
 | `World.findBlocksMatching(...)` | `JavaList<Pos3D>` | 只返回坐标列表，需再用 `World.getBlock(pos)` 取方块 |
-| `Player.rayTraceBlock(distance, fluid)` | `BlockDataHelper \| null` | 准星射线命中的方块 |
+| `Player.rayTraceBlock(distance, fluid)` | `BlockDataHelper | null` | 准星射线命中的方块 |
 | `Player.detailedRayTraceBlock(distance, fluid)` | `HitResultHelper$Block` | 带命中面信息的射线结果 |
 | 事件字段，如 `AttackBlock`、`InteractBlock`、`BlockUpdate` 的 `event.block` | `BlockDataHelper` | 事件触发时直接拿到 |
 | `Registries.getBlock(id)` | `BlockHelper` | 按 ID 查方块类型，不需要世界中真的存在 |
-| `World.getChunk(x, z)` | `ChunkHelper \| null` | 整个区块 |
+| `World.getChunk(x, z)` | `ChunkHelper | null` | 整个区块 |
 
 !!! tip "别混 ID 和显示名"
     `getId()` 返回的才是脚本判断用的 `minecraft:stone`；`getName()` 返回 `TextHelper`，是给人看的本地化文本（如"石头"），要显示时再 `.getString()`。
@@ -59,7 +59,7 @@ if (block) {
 | `getX()` / `getY()` / `getZ()` | `number` | 方块坐标 |
 | `getId()` | `string` | 方块 ID，如 `minecraft:chest` |
 | `getName()` | `TextHelper` | 本地化显示名 |
-| `getNBT()` | `NBTCompoundHelper \| null` | 方块实体 NBT，普通方块（石头、泥土）为 `null` |
+| `getNBT()` | `NBTCompoundHelper | null` | 方块实体 NBT，普通方块（石头、泥土）为 `null` |
 | `getBlockStateHelper()` | `BlockStateHelper` | 方块状态 helper |
 | `getBlock()` | `BlockHelper` | 方块类型 helper |
 | `getBlockHelper()` | `BlockHelper` | 同上，**已废弃**，请改用 `getBlock()` |
@@ -248,9 +248,6 @@ if (block && block.getId().endsWith("_door")) {
 !!! warning "只调用该方块真正拥有的属性"
     这些 getter 是给**所有**方块共用的，读取当前方块不存在的属性会直接报错。不确定时先用 `state.toMap()` 看看它到底有哪些属性，再决定调用哪个方法。
 
-!!! tip "属性太多，按分组浏览 d.ts"
-    上表只是代表性方法。完整列表在 `JsMacros-2.1.0.d.ts` 的 `UniversalBlockStateHelper` 类中（42705 行起），方法名基本与原版状态属性同名，按上面的分组去搜很快能找到。
-
 ## FluidStateHelper：流体状态
 
 从 `BlockStateHelper.getFluidState()` 获得。普通方块也能调用，只是结果为"空流体"。
@@ -335,8 +332,8 @@ if (chunk) {
 | --- | --- | --- |
 | `getPos()` | `Pos3D` | 命中点精确坐标（基类方法） |
 | `asBlock()` / `asEntity()` | 子类或 `null` | 转成方块 / 实体命中结果（基类方法） |
-| `Block.getBlockPos()` | `BlockPosHelper \| null` | 命中的方块坐标 |
-| `Block.getSide()` | `DirectionHelper \| null` | 命中的面 |
+| `Block.getBlockPos()` | `BlockPosHelper | null` | 命中的方块坐标 |
+| `Block.getSide()` | `DirectionHelper | null` | 命中的面 |
 | `Block.isMissed()` | `boolean` | 是否没打中 |
 | `Block.isInsideBlock()` | `boolean` | 起点是否在方块内部 |
 | `Entity.getEntity()` | `EntityHelper` | 命中的实体 |
@@ -444,10 +441,3 @@ if (player) {
 
 !!! tip "更大范围请用世界扫描器"
     `iterateSphere` / `iterateBox` 适合小范围；要在几十个区块里找方块，用 `World.findBlocksMatching(...)` 或性能更好的[世界扫描器](world_scanner.md)。
-
-## 相关页面
-
-- [世界](world.md)——`World.getBlock`、`iterateSphere` 等入口方法的完整说明
-- [世界扫描器](world_scanner.md)——大范围高性能方块搜索
-- [位置与向量](position.md)——`Pos3D`、`Vec3D` 与坐标运算
-- [HUD 渲染](hud.md)——把找到的方块画到屏幕上（ESP、路径点）

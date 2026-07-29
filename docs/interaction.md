@@ -4,13 +4,13 @@ icon: lucide/mouse-pointer-click
 
 # 交互管理器 InteractionManagerHelper
 
-交互管理器（`InteractionManagerHelper`）是 JsMacros 2.x 中**攻击、右键交互、挖掘方块、准心目标控制**的统一入口。旧的 `player.attack()`、`player.interactBlock()` 等方法在类型文件中已全部标注 `@deprecated`，并注明"moved to `Player.getInteractionManager()`"——新脚本一律推荐用本页的写法。
+交互管理器（`InteractionManagerHelper`）是 JsMacros 中**攻击、右键交互、挖掘方块、准心目标控制**的统一入口。旧的 `player.attack()`、`player.interactBlock()` 等方法已全部标注 `@deprecated`，并注明"moved to `Player.getInteractionManager()`"——新脚本一律推荐用本页的写法。
 
 它的核心思路是：管理器内部维护一个"当前目标"（准心指向的方块/实体，或你用 `setTarget()` 手动覆盖的目标），无参数的 `attack()`、`interact()`、`breakBlock()` 都作用于这个目标；带坐标/实体参数的重载则是"临时指定目标 → 执行 → 恢复"的快捷方式。
 
 ## 获取对象
 
-两个入口完全等价，`Player.interactions()` 只是 `Player.getInteractionManager()` 的别名（类型文件 JSDoc 原文："alias for `Player.getInteractionManager()`"），都自 1.9.0 起可用：
+两个入口完全等价，`Player.interactions()` 只是 `Player.getInteractionManager()` 的别名：
 
 ```javascript
 const im = Player.getInteractionManager()
@@ -257,7 +257,7 @@ im.holdInteract(false)  // 松开
 | `hasBreakBlockOverride()` | `boolean` | 是否还有未完成的 `breakBlock()` 任务 |
 | `cancelBreakBlock()` | 自身 | 取消由 `breakBlock()` / `breakBlockAsync()` 发起的挖掘 |
 
-坐标版 `breakBlock(x, y, z)` 在类型文件中给出了等价逻辑——先 `setTarget(x, y, z)`，确认目标确实是这个方块后再挖，最后自动 `clearTargetOverride()`，所以不用担心它残留目标覆盖。
+坐标版 `breakBlock(x, y, z)` 等价逻辑——先 `setTarget(x, y, z)`，确认目标确实是这个方块后再挖，最后自动 `clearTargetOverride()`，所以不用担心它残留目标覆盖。
 
 ### 挖掘结果 BreakBlockResult
 
@@ -317,7 +317,7 @@ im.clearTargetOverride()
 ```
 
 !!! warning "breakBlockAsync 的回调要用 methodToJavaAsync"
-    类型文件明确注明：这个回调**大多在主线程上被调用**，必须用 `JavaWrapper.methodToJavaAsync(...)` 而不是 `JavaWrapper.methodToJava(...)` 包装，否则可能报错。
+    这个回调**大多在主线程上被调用**，必须用 `JavaWrapper.methodToJavaAsync(...)` 而不是 `JavaWrapper.methodToJava(...)` 包装，否则可能报错。
 
 !!! tip "挖掘进度"
     交互管理器本身只提供 `isBreakingBlock()` / `hasBreakBlockOverride()` 两个状态查询，没有百分比进度方法。预估挖掘耗时可以用玩家对象的 `calculateMiningSpeed(blockState)`（返回大约需要的 tick 数），见[玩家](player.md)页。
@@ -329,7 +329,7 @@ im.clearTargetOverride()
 - **不传或 `false`**：动作提交后立即返回，脚本继续往下跑；
 - **`true`**：等这次动作真正执行完成后才返回。
 
-另外这几个方法**本身就是阻塞式**的，类型文件标注了 `@throws InterruptedException`（脚本被外部停止时会中断等待）：
+另外这几个方法**本身就是阻塞式**的，标注了 `@throws InterruptedException`（脚本被外部停止时会中断等待）：
 
 - `breakBlock()` 及其坐标/`BlockPosHelper` 重载——阻塞到方块挖完；
 - `holdInteract(ticks)` / `holdInteract(ticks, stopOnPause)`——阻塞指定 tick 数。
@@ -373,10 +373,3 @@ Chat.log("当前游戏模式：" + im.getGameMode())
     - `interactEntity()` 存在确定的发包顺序缺陷（GrimAC PacketOrderC / PacketOrderD），细节见[玩家页](player.md#interactentityentity-offhand)；
     - `setTarget()` + `interact()`/`breakBlock()` 指向准心之外的目标时，等于"没看着也能操作"，是各类反作弊的重点检测项；
     - `holdInteract` / `breakBlock` 本身模拟的是正常按键流程，风险主要来自你选的目标和触发频率。
-
-## 相关页面
-
-- [玩家](player.md)——玩家对象、`lookAt` 转头、旧交互方法与反作弊详解
-- [方块](blocks.md)——`BlockPosHelper` 与方块数据
-- [实体](entities.md)——`EntityHelper` 与实体筛选
-- [事件系统](events.md)——事件回调与线程模型

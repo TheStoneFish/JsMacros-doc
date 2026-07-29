@@ -43,7 +43,7 @@ event.stopListener = JavaWrapper.methodToJava(() => d2d.unregister())
 ```
 
 !!! tip "执行顺序"
-    d.ts 注释注明：停止服务时的顺序是 `stopListener` → 关闭事件监听 → 注销 Registrable → `postStopListener`。只要调用过 `unregisterOnStop`，服务就不会在脚本跑到末尾时自动退出——正适合常驻 HUD。
+   停止服务时的顺序是 `stopListener` → 关闭事件监听 → 注销 Registrable → `postStopListener`。只要调用过 `unregisterOnStop`，服务就不会在脚本跑到末尾时自动退出——正适合常驻 HUD。
 
 旧版全局注册函数 `Hud.registerDraw2D()` / `Hud.unregisterDraw2D()` / `Hud.registerDraw3D()` / `Hud.unregisterDraw3D()` 自 1.6.5 起已废弃，新代码一律用对象自己的 `register()` / `unregister()`。
 
@@ -147,8 +147,8 @@ event.unregisterOnStop(true, d3d)
 | `unregisterDraw3D(draw)` | `void` | :warning: 已废弃，用 `Draw3D.unregister()` |
 | `createScreen(title, dirtBG)` | `ScriptScreen` | 创建脚本屏幕，见[脚本屏幕](screen.md) |
 | `openScreen(s)` | `void` | 打开屏幕，传 `null` 关闭当前屏幕 |
-| `getOpenScreen()` | `IScreen \| null` | 当前打开的屏幕对象 |
-| `getOpenScreenName()` | `string \| null` | 当前屏幕名称 |
+| `getOpenScreen()` | `IScreen | null` | 当前打开的屏幕对象 |
+| `getOpenScreenName()` | `string | null` | 当前屏幕名称 |
 | `isContainer()` | `boolean` | 当前是否容器界面 |
 | `createTexture(width, height, name)` | `CustomImage` | 创建空白画布纹理 |
 | `createTexture(path, name)` | `CustomImage` | 从图片文件加载纹理（`path` 为绝对路径） |
@@ -160,7 +160,7 @@ event.unregisterOnStop(true, d3d)
 ### 自定义纹理
 
 ```javascript
-// 从文件加载（d.ts 标注 path 为图片文件的绝对路径）
+// 从文件加载 path 为图片文件的绝对路径）
 const image = Hud.createTexture("E:/图片/icon.png", "my_icon")
 
 // 或创建一张 64x64 的空白画布（CustomImage 上有画点画线等方法）
@@ -247,7 +247,7 @@ addText(text, x, y, color, zIndex, shadow, scale, rotation)         // 全参数
 
 | 参数 | 类型 | 说明 |
 | --- | --- | --- |
-| `text` | `string` \| `TextHelper` | 内容 |
+| `text` | `string` | `TextHelper` | 内容 |
 | `x`, `y` | `int` | 左上角坐标（缩放后坐标系） |
 | `color` | `int` | `0xRRGGBB` |
 | `zIndex` | `int` | 层级，大者在上 |
@@ -864,11 +864,3 @@ d2d.register()
     - 大量 3D 元素（比如矿物 ESP 的几百个 Box）放进**同一个** Draw3D，不要每个方块 new 一个 Draw3D。
     - 批量增删时可先 `unregister()`，改完再 `register()`。
     - 不再用的元素及时 `removeElement` / `removeBox`，或者整个 `clear()`。
-
-## 相关页面
-
-- [脚本屏幕](screen.md)——可交互 GUI（按钮、输入框、滑条）
-- [服务](services.md)——常驻脚本与 `unregisterOnStop`
-- [聊天与文本](chat.md)——`TextHelper` / `TextBuilder`，配合 `addText` 做彩色文字
-- [坐标与数学](position.md)——`Pos3D` / `Pos2D` / `BlockPosHelper`
-- [实体](entities.md)——`EntityHelper`，配合追踪线和实体绑定

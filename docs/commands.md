@@ -137,7 +137,7 @@ manager.createCommandBuilder("demo")
 !!! tip
     拿不准类型时先 `Chat.log(ctx.getArg("xxx"))` 打印看看。`literalArg` 是固定字面量，没有值可取——要区分走了哪个子命令，给每个分支各挂一个 `executes` 即可。
 
-!!! note "回调里别做长耗时操作"
+!!! note "回调里别做长耗时操作 看门狗"
     官方 JSDoc 建议：如果命令处理逻辑复杂、需要 `wait` 之类的等待操作，请在回调里用 `JsMacros.runScript(file, ctx)` 把工作转交给独立脚本——`CommandContextHelper` 本身就是一个事件对象（`BaseEvent`），可以直接当第二个参数传入。
 
 ## 自动补全
@@ -294,7 +294,5 @@ Chat.log("§a/waypoint 已注册: add <名字> | list | del <名字>")
     - **重复注册**：同名命令重复 `register()` 会产生冲突或异常。重载脚本前先 `unregisterCommand`（包上 try/catch），或保留 `CommandBuilder` 对象调用 `unregister()`。
     - **回调上下文**：`executes` / `suggest` 的回调依赖注册它的脚本上下文。普通脚本运行结束上下文就被回收，命令会失效——请把注册命令的脚本作为**服务（Service）**常驻运行。
     - **贪婪参数放最后**：`greedyStringArg` 会吞掉后面的一切，它之后不能再声明参数。
-    - **切换服务器后失效**：命令树由服务器在进服时重新下发，如果换服后发现命令不见了，可监听 `JoinServer` 事件重新注册。
-    - **不要用 Chat.say 调自己的命令**：客户端命令在本地就被拦截，用 `Chat.say("/waypoint list")` 触发是可以的，但没必要发包语义，直接调用函数更干净。
 
-相关页面：[聊天与文本](chat.md) · [事件系统](events.md) · [文件系统 FS](fs.md)
+

@@ -31,15 +31,6 @@ JsMacros 的并发模型可以概括成三句话：
 3. **joined（加入线程）是例外。** 勾选 joined 的脚本/监听器会"加入"触发事件的线程，事件会等你的代码跑完（或释放锁）才继续——所以你才有机会 `cancel()` 掉 `SendMessage` 这类事件。
 
 ### joined 与看门狗
-这类事件有几率触发看门狗：
-```
-SendMessage
-RecvMessage
-Key
-SignEdit
-ClickSlot
-DropSlot
-```
 joined 脚本阻塞的是游戏线程本身，因此 JsMacros 用"看门狗"保护游戏：joined 脚本占住游戏线程太久（默认约 500 毫秒，可在 JsMacros 设置里调整）会被强制终止。`Client.runOnMainThread` 的 `watchdogMaxTime` 参数就是同一套机制：
 
 ```typescript
@@ -241,5 +232,5 @@ Chat.log(`宏文件夹: ${JsMacros.getConfig().macroFolder.getAbsolutePath()}`)
 ```
 !!! tip "相关页面"
     - 事件注册（`on` / `once` / `off` / `waitForEvent`）详见[事件系统](events.md)
-    - 给事件加过滤条件详见[事件过滤器](event_filters.md)
+    - 给事件加过滤条件详见[事件系统](events.md)
     - 常驻后台脚本详见[服务脚本](services.md)
