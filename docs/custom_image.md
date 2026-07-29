@@ -94,8 +94,6 @@ img.fillRect(0, 0, 32, 32)
 
 ## 方法参考
 
-以下按功能分组，签名与 `JsMacros-2.1.0.d.ts` 逐一对应。除特别注明外，方法均自 1.8.4 起、返回自身（可链式）。
-
 ### 基本信息
 
 | 方法 | 返回 | 说明 |
@@ -203,14 +201,19 @@ shapes.setGraphicsColor(0xFF5555)
 ```javascript
 // 拼贴 + 缩放 + 存盘
 const board = Hud.createTexture(128, 128, "collage")
-const icon = board.loadImage("icons/star.png")        // <配置文件夹>/icons/star.png
+ // <配置文件夹>/icons/star.png
+const icon = board.loadImage("icons/star.png")       
 if (icon) {
-    board.drawImage(icon, 0, 0, 128, 128)             // 铺满整张画布（缩放）
-         .drawImage(icon, 96, 96, 32, 32)             // 右下角再贴一个小的
+        // 铺满整张画布（缩放）
+    board.drawImage(icon, 0, 0, 128, 128)            
+        // 右下角再贴一个小的
+         .drawImage(icon, 96, 96, 32, 32)            
 }
-board.copyArea(0, 0, 64, 64, 64, 0)                   // 左上 64x64 复制到右上
+ // 左上 64x64 复制到右上
+board.copyArea(0, 0, 64, 64, 64, 0)                  
      .update()
-     .saveImage("out", "collage_result")              // <配置文件夹>/out/collage_result.png
+    // <配置文件夹>/out/collage_result.png
+     .saveImage("out", "collage_result")              、
 ```
 
 ### 文字绘制
@@ -220,15 +223,13 @@ board.copyArea(0, 0, 64, 64, 64, 0)                   // 左上 64x64 复制到�
 | `drawString(x, y, text)` | 自身 | 在 `(x, y)` 处用当前画笔颜色画文字 |
 | `getStringWidth(toAnalyze)` | `number` | 该字符串按当前字体的像素宽度，用于对齐/居中计算 |
 
-!!! warning "关于字体"
-    d.ts 中没有暴露任何设置字体的方法，`drawString` 使用 Java AWT 的默认字体。另外按 AWT 约定，`y` 是文字**基线**位置而不是文字顶部——想让文字贴着某个顶边，`y` 要往下加一个字高。需要花哨字体时，建议在图片编辑器里做好再 `loadImage` / `drawImage` 贴进来。
-
 ```javascript
 const label = Hud.createTexture(100, 20, "label_demo")
 const text = "Hello JsMacros"
 const w = label.getStringWidth(text)
 label.setGraphicsColor(0xFFFFFF)
-     .drawString(Math.floor((100 - w) / 2), 14, text)   // 水平居中
+    // 水平居中
+     .drawString(Math.floor((100 - w) / 2), 14, text)   
      .update()
 ```
 
@@ -304,10 +305,3 @@ d2d.register()
 - **纹理注册是全局的**。CustomImage 一经创建就注册进 `Hud.getRegisteredTextures()`，脚本结束也不会消失；给 `name` 起唯一名字，重复运行脚本时优先复用已注册的对象而不是无限新建。
 - **画完没反应先查两件事**：忘了 `update()`；或者画笔/像素颜色的透明度为 0（ARGB 高 8 位是 0 时完全透明）。
 - **Draw2D 窗口缩放会清空元素**，但 CustomImage 纹理本身不受影响——把 `imageBuilder`/`addImage` 放进 `setOnInit` 就够了，不需要重新绘制画布。
-
-## 相关页面
-
-- [HUD 渲染](hud.md)——`Image` 元素、`addImage` 全部重载、`Image$Builder` 速查、Draw2D 生命周期
-- [脚本屏幕](screen.md)——把 CustomImage 用作可交互屏幕上的图片/背景
-- [文件系统](fs.md)——配置文件夹内文件的读写与路径管理
-- [Java 互操作](java_api.md)——`BufferedImage` 等 AWT 类型的进一步操作

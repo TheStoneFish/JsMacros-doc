@@ -46,13 +46,13 @@ JsMacros.on("Tick", JavaWrapper.methodToJava((e, ctx) => {
 
 ### JsMacros.on
 
-`on` 返回一个 `IEventListener`，留着它才能之后 `off` 掉。全部重载（对照 d.ts）：
+`on` 返回一个 `IEventListener`，留着它才能之后 `off` 掉。全部重载：
 
 | 重载 | 说明 |
 | --- | --- |
 | `on(event, callback)` | 最简单形式，回调异步运行（joined = false）|
 | `on(event, joined, callback)` | 指定是否加入（阻塞）事件线程 |
-| `on(event, filter, callback)` | 附带 Java 端 `EventFilter` 过滤器 |
+| `on(event, filter, callback)` | 附带过滤器, 过滤事件 |
 | `on(event, filter, joined, callback)` | 过滤器 + joined |
 
 ```javascript
@@ -62,10 +62,6 @@ const listener = JsMacros.on("Key", JavaWrapper.methodToJava((e, ctx) => {
     }
 }))
 ```
-
-!!! tip "on 的 filter 是 EventFilter，不是 JS 函数"
-    `on` 的过滤器参数必须是 `JsMacros.eventFilters()` 创建的 Java 端过滤器（见下文），在事件线程上以 Java 速度先筛一遍，脚本回调只在通过时才执行。想用 JS 函数过滤，请用 `waitForEvent`。
-
 ### JsMacros.once
 
 只触发一次后自动注销：
@@ -130,28 +126,17 @@ const l = JsMacros.on("Tick", JavaWrapper.methodToJava(() => {
 ```javascript
 JsMacros.on("SendMessage", true, JavaWrapper.methodToJava((e, context) => {
     if (e.message && e.message.startsWith(".local")) {
-        e.cancel()             // 1. 先拦截
-        context.releaseLock()  // 2. 立刻放行游戏线程
+        // 1. 先拦截
+        e.cancel()             
+        // 2. 立刻放行游戏线程
+        context.releaseLock()  
         // 3. 之后再慢慢做耗时的事
         Chat.log(`本地命令: ${e.message}`)
     }
 }))
 ```
 
-### EventContainer 方法表
-
-`context` 参数（以及 `waitForEvent` 返回值里的 `context`）是 `EventContainer`，方法如下：
-
-| 方法 | 说明 |
-| --- | --- |
-| `releaseLock()` | 提前释放事件锁，joined 监听的标配 |
-| `isLocked()` | 是否仍持有锁 |
-| `getCtx()` | 获取脚本上下文（`BaseScriptContext`，见 [脚本上下文](script_context.md)）|
-| `getLockThread()` | 获取持锁线程 |
-| `setLockThread(thread)` | 设置持锁线程（一般用不到）|
-| `awaitLock(then)` | 等待锁释放后执行 `then`（`MethodWrapper`）。**小心死锁**，脚本里少用 |
-
-## 等待事件：waitForEvent
+## 等待事件（waitForEvent）
 
 `JsMacros.waitForEvent` 会**阻塞当前脚本线程**，直到事件发生，非常适合写"顺序流程"的脚本。全部重载：
 
@@ -183,7 +168,7 @@ Chat.log(`按键: ${result.event.key}`)
 // 等待一条包含"完成"的聊天消息
 const result = JsMacros.waitForEvent(
     "RecvMessage",
-    JavaWrapper.methodToJava((e) => e.text != null && e.text.getString().includes("完成"))
+    JavaWrapper.methodToJava((e) => e.text.getString().includes("完成"))
 )
 Chat.log(`等到了: ${result.event.text.getString()}`)
 ```
@@ -199,39 +184,12 @@ result.context.releaseLock() // joined 等待必须记得放行
 !!! note "waitForEvent 与已持有的锁"
     如果当前线程已经绑定在某个事件上（比如在 joined 回调里调用），`waitForEvent` 会先释放当前锁再开始等待。另外它会抛出 `InterruptedException`——脚本被停止时等待会被打断，属正常现象。
 
-## 事件过滤器（EventFilter）
-
-`JsMacros.eventFilters()`（2.1.0 新增）返回过滤器工厂，创建的过滤器在 Java 端执行，用于 `on` 的 `filter` 参数，比在回调里手动 `if` 高效得多：
-
-| 工厂方法 | 作用 |
-| --- | --- |
-| `modulus(n)` | 每 n 次事件放行 1 次 |
-| `limited(n)` | 只放行前 n 次 |
-| `invert(filter)` | 反转过滤器结果 |
-| `composed(initial)` | 组合多个过滤器（与/或逻辑）|
-| `compile(code)` / `compile(event, code)` / `compile(event, ...conditions)` | 把 Java 代码编译成过滤器 |
-
-```javascript
-// 每 20 tick 执行一次（约每秒）
-JsMacros.on("Tick", JsMacros.eventFilters().modulus(20), JavaWrapper.methodToJava(() => {
-    // 每秒一次的轮询
-}))
-
-// 只对特定按键触发
-const filter = JsMacros.eventFilters().compile("Key", 'event.action == 1 && eq(event.key, "key.keyboard.g")')
-JsMacros.on("Key", filter, JavaWrapper.methodToJava(() => Chat.log("G!")))
-```
-
-详细用法见 [事件过滤器](event_filters.md)。
-
 ## 自定义事件（Custom）
 
 `JsMacros.createCustomEvent(eventName)` 创建一个 `Events.Custom` 对象，可以携带数据并触发，是**脚本间通信**的标准方案。
 
 !!! tip "起名别撞车"
     不要使用已有事件名（如 `"Tick"`），否则其他脚本会被你搞糊涂。建议加前缀，如 `"myMod:refresh"`。
-
-### 方法全表（以 d.ts 为准）
 
 | 分类 | 成员 | 说明 |
 | --- | --- | --- |
@@ -285,7 +243,8 @@ ev.registerEvent() // 之后 GUI 事件下拉框里就能看到它
 ```javascript
 const listener = JsMacros.on("Tick", JavaWrapper.methodToJava(() => {}))
 // 不需要时:
-JsMacros.off(listener)      // 或 listener.off()
+// 或 listener.off()
+JsMacros.off(listener)      
 ```
 
 ### 按范围批量关闭

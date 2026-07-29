@@ -60,7 +60,7 @@ Minecraft 用统一的字符串命名每个物理键：键盘键是 `key.keyboar
 
 ### 修饰键组合 KeyMods
 
-`Key` 事件的 `event.mods` 字段表示触发时按住的修饰键。按 d.ts 中 `KeyMod` / `KeyMods` 的定义，修饰键统一用左侧键名表示，多个修饰键按 **shift → ctrl → alt** 的顺序用 `+` 连接：
+`Key` 事件的 `event.mods` 字段表示触发时按住的修饰键，修饰键统一用左侧键名表示，多个修饰键按 **shift → ctrl → alt** 的顺序用 `+` 连接：
 
 | 组合 | mods 值 |
 | --- | --- |

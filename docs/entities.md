@@ -193,8 +193,10 @@ const target = player.rayTraceEntity(5)
 `is(...)` 检查实体类型是否匹配任一给定 ID（可省略 `minecraft:` 前缀）：
 
 ```javascript
-entity.is("creeper")            // 是不是苦力怕
-entity.is("zombie", "husk")     // 任一匹配即为 true
+// 是不是苦力怕
+entity.is("creeper")            
+// 任一匹配即为 true
+entity.is("zombie", "husk")     
 ```
 
 `as` 系列做类型转换：
@@ -204,7 +206,7 @@ entity.is("zombie", "husk")     // 任一匹配即为 true
 | `asClientPlayer()` | 本地玩家（`ClientPlayerEntityHelper`） |
 | `asPlayer()` | 玩家（`PlayerEntityHelper`） |
 | `asLiving()` | 生物（`LivingEntityHelper`） |
-| `asAnimal()` | 动物（按 d.ts 返回 `LivingEntityHelper`） |
+| `asAnimal()` | 动物（`AnimalEntityHelper`） |
 | `asItem()` | 掉落物（`ItemEntityHelper`） |
 | `asVillager()` | 村民（`VillagerEntityHelper`） |
 | `asMerchant()` | 可交易实体（`MerchantEntityHelper`） |

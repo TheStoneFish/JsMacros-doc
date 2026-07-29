@@ -51,9 +51,6 @@ Chat.log(`${stack.getName().getString()} 最大耐久 ${stack.getMaxDurability()
     接受物品/附魔 ID 的参数都是 `CanOmitNamespace` 类型：写 `"diamond_sword"` 和 `"minecraft:diamond_sword"` 等价。模组物品则必须带命名空间。
 
 ## ItemStackHelper 方法参考
-
-下面按用途分组，覆盖 d.ts 中 `ItemStackHelper` 的全部方法。
-
 ### 识别与基本信息
 
 | 方法 | 返回 | 说明 |
@@ -158,7 +155,7 @@ const listener = JsMacros.on("Tick", JavaWrapper.methodToJava(() => {
 | --- | --- | --- |
 | `isEnchanted()` | `boolean` | 是否已附魔 |
 | `getEnchantments()` | `JavaList<EnchantmentHelper>` | 全部附魔列表 |
-| `getEnchantment(id)` | `EnchantmentHelper \| null` | 按 ID 取附魔（含等级），没有则 `null` |
+| `getEnchantment(id)` | `EnchantmentHelper | null` | 按 ID 取附魔（含等级），没有则 `null` |
 | `hasEnchantment(id)` | `boolean` | 是否带指定 ID 的附魔（**不看等级**） |
 | `hasEnchantment(enchantment)` | `boolean` | 是否带指定附魔**且等级相同**（传 `EnchantmentHelper`） |
 | `canBeApplied(enchantment)` | `boolean` | 指定附魔能否附到这件物品上 |
@@ -242,8 +239,6 @@ if (stack.isFood()) {
 | --- | --- | --- |
 | `getNBT()` | `NBTElementHelper$NBTCompoundHelper` | 物品携带的 NBT 数据，用法见下文 [NBT 详解](#nbt-详解) |
 
-!!! note "1.21 的物品数据已经组件化"
-    从 MC 1.20.5 起，原版把物品上的自由 NBT 改成了结构化的**数据组件**（data components），自定义数据一般收进 `minecraft:custom_data` 组件里。JsMacros 2.1.0 的 d.ts 中物品数据入口仍然只有 `getNBT()` 一个，没有单独的组件 API——你拿到的键名结构可能与老版本教程不同（例如出现 `minecraft:custom_data` 这样的键）。**以你实际打印出来的结构为准**，别照抄 1.20 之前的路径。
 
 ### Lore 与显示
 
@@ -276,7 +271,7 @@ if (stack.isFood()) {
 
 ### 构造器
 
-一般不需要手动构造（用注册表更方便），但 d.ts 提供了：`new ItemStackHelper(id, count)`（按 ID 与数量）和包装原始 `ItemStack` 的重载。
+一般不需要手动构造（用注册表更方便）但是可以用 `new ItemStackHelper(id, count)`（按 ID 与数量）和包装原始 `ItemStack` 的重载。
 
 ## ItemHelper 方法全表
 
@@ -293,18 +288,18 @@ if (stack.isFood()) {
 | `isTool()` | `boolean` | 是否为工具 |
 | `isWearable()` | `boolean` | 是否可穿戴 |
 | `isFood()` | `boolean` | 是否为食物 |
-| `getFood()` | `FoodComponentHelper \| null` | 食物数据，非食物返回 `null` |
+| `getFood()` | `FoodComponentHelper | null` | 食物数据，非食物返回 `null` |
 | `isBlockItem()` | `boolean` | 是否有对应方块（如圆石有、剑没有） |
-| `getBlock()` | `BlockHelper \| null` | 对应方块，没有则 `null`，见[方块](blocks.md) |
+| `getBlock()` | `BlockHelper | null` | 对应方块，没有则 `null`，见[方块](blocks.md) |
 | `getMiningSpeedMultiplier(state)` | `number` | 对指定方块状态的挖掘速度倍率（默认 `1`） |
 | `isSuitableFor(block)` | `boolean` | 挖该方块能否正常掉落（`BlockHelper` / `BlockStateHelper` 两个重载） |
 | `canBeRepairedWith(stack)` | `boolean` | 传入的物品能否作为修复材料（如钻石修钻石镐） |
 | `getEnchantability()` | `number` | 附魔能力值（越高越容易出好附魔，金质装备就很高），默认 `0` |
 | `hasRecipeRemainder()` | `boolean` | 合成后是否留下残留物（如牛奶桶留空桶） |
-| `getRecipeRemainder()` | `ItemStackHelper \| null` | 残留物，没有则 `null` |
+| `getRecipeRemainder()` | `ItemStackHelper | null` | 残留物，没有则 `null` |
 | `canBeNested()` | `boolean` | 能否放入收纳袋/潜影盒（潜影盒本身就不能套潜影盒） |
 | `getCreativeTab()` | `JavaList<TextHelper>` | 创造模式物品栏分组名 |
-| `getGroupIcon()` | `JavaList<ItemStackHelper> \| null` | 分组图标物品，无分组时 `null` |
+| `getGroupIcon()` | `JavaList<ItemStackHelper> | null` | 分组图标物品，无分组时 `null` |
 | `getDefaultStack()` | `ItemStackHelper` | 生成一件数量为 1 的默认物品 |
 | `getStackWithNbt(nbt)` | `ItemStackHelper` | 生成一件带指定 NBT（SNBT 字符串）的物品，NBT 格式不合法会抛异常 |
 
@@ -391,7 +386,7 @@ NBT 是树形结构，每个节点都是一个 `NBTElementHelper`。用法固定
 | `asString()` | `string` | 字符串节点返回其值；其他节点返回 toString 表示（**万能打印**） |
 | `asText()` | `TextHelper` | 带格式的美化文本版（适合直接 `Chat.log`） |
 | `getType()` | `number` | NBT 类型编号（见下表） |
-| `resolve(nbtPath)` | `JavaList<NBTElementHelper> \| null` | 按 [NBT 路径](https://minecraft.wiki/w/NBT_path_format)取节点，找不到返回 `null`，格式错误抛异常 |
+| `resolve(nbtPath)` | `JavaList<NBTElementHelper> | null` | 按 [NBT 路径](https://minecraft.wiki/w/NBT_path_format)取节点，找不到返回 `null`，格式错误抛异常 |
 
 静态方法：`NBTElementHelper.wrap(element)`、`wrapCompound(compound)`、`resolve(element)` 用于包装原始 NBT 对象，一般用不到。
 
@@ -413,7 +408,7 @@ NBT 是树形结构，每个节点都是一个 `NBTElementHelper`。用法固定
 | --- | --- | --- |
 | `getKeys()` | `JavaSet<string>` | 全部键名 |
 | `has(key)` | `boolean` | 是否存在某键 |
-| `get(key)` | `NBTElementHelper \| null` | 取子节点 |
+| `get(key)` | `NBTElementHelper | null` | 取子节点 |
 | `getType(key)` | `number` | 某键的值类型编号 |
 | `asString(key)` | `string` | 直接把某键的值转字符串 |
 
@@ -422,10 +417,10 @@ NBT 是树形结构，每个节点都是一个 `NBTElementHelper`。用法固定
 | 方法 | 返回 | 说明 |
 | --- | --- | --- |
 | `length()` | `number` | 元素个数 |
-| `get(index)` | `NBTElementHelper \| null` | 按下标取元素 |
+| `get(index)` | `NBTElementHelper | null` | 按下标取元素 |
 | `getHeldType()` | `number` | 元素的类型编号 |
 | `isPossiblyUUID()` | `boolean` | 是否可能是 UUID（4 个 int 的列表） |
-| `asUUID()` | `java.util.UUID \| null` | 转成 UUID |
+| `asUUID()` | `java.util.UUID | null` | 转成 UUID |
 
 ### NBTNumberHelper（数字）
 
@@ -527,37 +522,3 @@ Chat.log(hits > 0 ? `共找到 ${hits} 件` : `背包里没有 Lore 含"${keywor
 !!! note "颜色代码不影响匹配"
     `getString()` 返回的是**剥掉格式后的纯文本**，Lore 里的 `§c` 之类颜色代码不会混进来，直接 `includes()` 匹配即可。槽位编号与 `getLocation()` 的含义见[背包与容器](inventory.md)。
 
-## RecipeHelper：配方
-
-在**玩家背包、工作台、熔炉**这类带配方书的界面里（`RecipeInventory` 子类），可以列出并直接合成配方：`inv.getCraftableRecipes()`（当前可合成的）或 `inv.getRecipes(craftable)`。
-
-| 方法 | 返回 | 说明 |
-| --- | --- | --- |
-| `getOutput()` | `ItemStackHelper` | 配方产物 |
-| `getIngredients()` | `JavaList<JavaList<ItemStackHelper>>` | 原料表（每格是一组可替换物品） |
-| `craft(craftAll)` | `RecipeHelper` | 合成：`false` 合一次，`true` 合到不能再合 |
-| `canCraft()` / `canCraft(amount)` | `boolean` | 当前背包能否合成（指定数量） |
-| `getCraftableAmount()` | `number` | 当前背包最多能合几次 |
-| `getGroup()` | `string` | 配方分组 |
-
-```javascript
-// 打开背包或工作台后运行：列出现在能合成什么
-const inv = Player.openInventory()
-if (inv.is("Survival Inventory", "Crafting Table")) {
-    for (const r of Java.from(inv.getCraftableRecipes())) {
-        const out = r.getOutput()
-        Chat.log(`${out.getName().getString()} x${out.getCount()}（最多 ${r.getCraftableAmount()} 次）`)
-    }
-    // 找到想要的配方后：r.craft(false) 合一次；r.craft(true) 合到底
-} else {
-    Chat.log("请在玩家背包或工作台界面运行")
-}
-```
-
-## 相关页面
-
-- [背包与容器](inventory.md)：槽位编号、getMap 分区、点击与搬运物品
-- [聊天与文本](chat.md)：`TextHelper` 的完整用法（`getName()`/`getLore()` 都返回它）
-- [实体](entities.md)：主手/副手/盔甲、掉落物实体
-- [方块](blocks.md)：`isSuitableFor` 用到的 `BlockHelper` / `BlockStateHelper`
-- [事件系统](events.md)与[全部事件参考](events_reference.md)：携带物品字段的事件

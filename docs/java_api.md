@@ -20,9 +20,9 @@ JsMacros 脚本运行在 JVM 里：JS 版脚本由 **GraalJS** 引擎执行，�
 
 | 方式 | 来源 | 编辑器补全 | 说明 |
 | --- | --- | --- | --- |
-| `Packages.java.util.ArrayList` | JsMacros 全局 `Packages` 包树 | 有（d.ts 已声明的类） | 首选。按包路径逐级访问 |
+| `Packages.java.util.ArrayList` | JsMacros 全局 `Packages` 包树 | 有（已声明的类） | 首选。按包路径逐级访问 |
 | `Reflection.getClass("java.util.ArrayList")` | JsMacros `Reflection` 库 | 有 | 支持"双名"回退，适合 Minecraft 混淆类（见下文 Reflection 一节） |
-| `Java.type("java.util.ArrayList")` | GraalJS 引擎内置 | 无 | GraalJS 运行时可用，但 d.ts 没有声明它，编辑器会报错；且其他脚本语言（Python/Lua 等）没有这个函数。文档统一用前两种 |
+| `Java.type("java.util.ArrayList")` | GraalJS 引擎内置 | 无 | GraalJS 运行时可用，但没有类型声明，编辑器会报错；且其他脚本语言（Python/Lua 等）没有这个函数。文档统一用前两种 |
 
 ```javascript
 // 三种写法在 JS 运行时是等价的
@@ -40,32 +40,13 @@ Chat.log(list.size()) // 1
 const stringClass = Packages.java.lang.String.class
 Chat.log(stringClass.getName()) // java.lang.String
 ```
-
-### Packages 树里有什么
-
-d.ts 中 `declare namespace Packages`（3424 行起）声明了这些顶层包：
-
-| 包 | 内容 |
-| --- | --- |
-| `Packages.java.*` | JDK 标准库：`java.lang`、`java.util`、`java.io`、`java.time`、`java.text`、`java.nio` 等 |
-| `Packages.xyz.wagyourtail.*` | JsMacros 自己的类：`MethodWrapper`、各种 Helper、`ProxyBuilder` 等 |
-| `Packages.com.google.gson.*` | Gson（`JsonObject`、`JsonArray` 等 JSON 处理） |
-| `Packages.org.*` | jOOR（`org.joor.Reflect`）、slf4j 日志等 |
-| `Packages.javax.*`、`Packages.javassist.*`、`Packages.it.unimi.dsi.fastutil.*` | Swing、字节码、fastutil 等依赖库 |
-
-!!! note "d.ts 没声明 ≠ 运行时没有"
-    d.ts 只收录 JsMacros API 引用到的类和成员。运行时的 `Packages` 是真正的包访问器，**类路径上的任何类都能访问**——比如 `Packages.java.text.SimpleDateFormat` 没出现在 d.ts 里，但照样能用，只是编辑器没有补全、可能标红。
-
-!!! warning "为什么 Packages 里没有 net.minecraft"
-    d.ts 里 Minecraft 类一律写成 `/* net.minecraft.client.Minecraft */ any` 这样的注释。因为正式客户端里 Minecraft 类是**混淆名**（如 `net.minecraft.class_310`），开发环境才叫 `net.minecraft.client.MinecraftClient`——同一个类两个名字，没法静态声明。访问 MC 内部类请走 Helper 的 `getRaw()`、`Client.getMinecraft()`，或 `Reflection.getClass` 的双名重载。
-
 ## JavaWrapper：把 JS 函数包装成 Java 回调
 
 ### 为什么回调必须包装
 
 JS 语言规范要求**同一时刻只能有一个线程持有一个脚本上下文**。而 JsMacros 里事件是从各种 Java 线程（游戏主线程、网络线程、其他脚本线程）发起的——如果 Java 直接调用你的 JS 函数，就是跨线程闯入你的上下文，要么崩溃要么数据错乱。
 
-`JavaWrapper.methodToJava` 系列把 JS 函数包装成 `MethodWrapper` 对象来解决这个问题：d.ts 的 JSDoc 原文说明，JS 实现用一个**非抢占式优先级队列**管理所有想调用这个包装的线程——调用方排队，等脚本上下文空闲了才轮到自己执行 JS 代码。
+`JavaWrapper.methodToJava` 系列把 JS 函数包装成 `MethodWrapper` 对象来解决这个问题：JS 实现用一个**非抢占式优先级队列**管理所有想调用这个包装的线程——调用方排队，等脚本上下文空闲了才轮到自己执行 JS 代码。
 
 另外一个直接原因：`JsMacros.on` 等方法的 Java 签名要求 `MethodWrapper` 参数，传裸 JS 函数会直接抛类型错误。
 
@@ -121,14 +102,14 @@ JsMacros.off(listener)
 
 ## MethodWrapper：能冒充一切函数式接口的对象
 
-`JavaWrapper.methodToJava*` 返回的 `MethodWrapper`（d.ts 47086 行，`Packages.xyz.wagyourtail.jsmacros.core.MethodWrapper<T, U, R, C>`）同时实现了 Java 常用的函数式接口：
+`JavaWrapper.methodToJava*` 返回的 `MethodWrapper`（`Packages.xyz.wagyourtail.jsmacros.core.MethodWrapper<T, U, R, C>`）同时实现了 Java 常用的函数式接口：
 
 `Runnable`、`Comparator<T>`、`Consumer<T>`、`BiConsumer<T, U>`、`Function<T, R>`、`BiFunction<T, U, R>`、`Predicate<T>`、`BiPredicate<T, U>`、`Supplier<R>`
 
-也就是说，**任何**接受这些接口的 Java API 都能直接收下一个 `MethodWrapper`。d.ts 里 Java 集合的签名干脆直接写成了 `MethodWrapper`：
+也就是说，**任何**接受这些接口的 Java API 都能直接收下一个 `MethodWrapper`。Java 集合的类型签名干脆直接写成了 `MethodWrapper`：
 
 ```typescript
-// Packages.java.util.ArrayList 节选（d.ts 21219–21223 行）
+// Packages.java.util.ArrayList 节选
 forEach(arg0: MethodWrapper<E>): void;
 removeIf(arg0: MethodWrapper<E, any, boolean>): boolean;
 sort(arg0: MethodWrapper<E, E, int>): void;
@@ -153,11 +134,13 @@ sort(arg0: MethodWrapper<E, E, int>): void;
 在脚本里也可以手动调用这些方法——这就是"在 JS 里调用被包装的 JS 函数"，同样会走队列：
 
 ```javascript
-const double = JavaWrapper.methodToJava((x) => x * 2)
-const addOne = JavaWrapper.methodToJava((x) => x + 1)
-const combined = double.andThen(addOne)
+const double = JavaWrapper.methodToJava(x => x * 2)
+const addOne = JavaWrapper.methodToJava(x => x + 1)
 
-Chat.log(combined.apply(5)) // 11 ( 5*2 + 1 )
+// 这里需要指定一下调用的函数 因为有多个重载
+const combined = double["andThen(java.util.function.Function)"](addOne)
+// 11 ( 5*2 + 1 )
+Chat.log(combined.apply(5)) 
 
 // 传给 Java 集合 API
 const nums = JavaUtils.createArrayList([5, 3, 8, 1])
@@ -197,7 +180,7 @@ Chat.log(helper.getName().getString())
 
 ## Reflection：反射库
 
-`Reflection`（d.ts 2657–2845 行）覆盖了从"拿类"到"运行时编译 Java"的完整链条。
+`Reflection` 覆盖了从"拿类"到"运行时编译 Java"的完整链条。
 
 ### 全方法表
 
@@ -231,7 +214,7 @@ Chat.log(helper.getName().getString())
 | --- | --- | --- |
 | `loadJarFile(file)` | `boolean` | 加载 jar 到类路径，路径**相对脚本文件夹** |
 | `compileJavaClass(className, code)` | `Class` | 运行时编译 Java 类（要求装了 JDK） |
-| `getCompiledJavaClass(className)` | `Class \| null` | 最近一次编译的版本 |
+| `getCompiledJavaClass(className)` | `Class | null` | 最近一次编译的版本 |
 | `getAllCompiledJavaClassVersions(className)` | `JavaList<Class>` | 全部编译版本，按编译顺序 |
 | `createLibrary(className, javaCode)` | `void` | 编译并注册一个 JsMacros 库类 |
 
@@ -261,7 +244,7 @@ Chat.log(Reflection.getClassName(mc))
 ```
 
 !!! warning "反射 MC 内部成员前先查映射"
-    方法/字段的 intermediary 名（`method_1551` 之类）没法猜，必须查映射表。d.ts 对 `Client.getMinecraft()` 的注释就推荐了 [Minecraft Mappings Viewer](https://wagyourtail.xyz/Projects/Minecraft%20Mappings%20Viewer/App)：选好版本后搜类名，把 intermediary 名和 yarn 名分别填进双名参数。只写一个名字的脚本换个环境（或换个 MC 版本）就会 `NoSuchMethodException`。能用 Helper 解决的事永远别用反射。
+    方法/字段的 intermediary 名（`method_1551` 之类）没法猜，必须查映射表。推荐用 [linkie](https://linkie.shedaniel.dev/)：选好版本后搜类名，把 intermediary 名和 yarn 名分别填进双名参数。只写一个名字的脚本换个环境（或换个 MC 版本）就会 `NoSuchMethodException`。能用 Helper 解决的事永远别用反射。
 
 ### 实战：完整的反射流程
 
@@ -327,27 +310,14 @@ const hello = Reflection.newInstance(HelloClass)
 Chat.log(hello.hi())
 ```
 
-d.ts 的 JSDoc 强调两点：编译出的类**不能被脚本语言直接按名字访问**，要通过 `GlobalVars.putObject` 存起来或从本库取回；热更新不会影响已创建的实例——重新编译后旧实例还是旧类，`getAllCompiledJavaClassVersions` 能看到全部历史版本。
+有两点要强调：编译出的类**不能被脚本语言直接按名字访问**，要通过 `GlobalVars.putObject` 存起来或从本库取回；热更新不会影响已创建的实例——重新编译后旧实例还是旧类，`getAllCompiledJavaClassVersions` 能看到全部历史版本。
 
-`createLibrary(className, javaCode)` 更进一步：编译一个带 `@Library` 注解、继承 `BaseLibrary`（或 `PerExecLibrary` 等）的类，注册成所有脚本可用的全局库。`createClassProxyBuilder`、`createClassBuilder`、`createLibraryBuilder` 属于写扩展库的工具，普通宏脚本用不到，需要时对照 d.ts 里 `ProxyBuilder`、`ClassBuilder`、`LibraryBuilder` 的声明使用。
+`createLibrary(className, javaCode)` 更进一步：编译一个带 `@Library` 注解、继承 `BaseLibrary`（或 `PerExecLibrary` 等）的类，注册成所有脚本可用的全局库。`createClassProxyBuilder`、`createClassBuilder`、`createLibraryBuilder` 属于写扩展库的工具，普通宏脚本用不到，需要时对照 `ProxyBuilder`、`ClassBuilder`、`LibraryBuilder` 的声明使用。
 
 !!! warning "进阶危险区"
     反射私有成员、加载 jar、运行时编译都绕过了正常的兼容性保障，MC 或 JsMacros 更新后随时可能失效；jar 里的代码拥有和 Mod 一样的权限，**只加载你信任的 jar**。
 
-## java.* 标准库速查
-
-脚本里最常直接使用的标准库类：
-
-| 类 | 用途 |
-| --- | --- |
-| `Packages.java.util.ArrayList` / `HashMap` / `HashSet` | 集合（也可用 `JavaUtils.create*`） |
-| `Packages.java.util.UUID` | 玩家/实体 UUID 解析比较 |
-| `Packages.java.util.Optional` | 一些 Java API 的返回值，用 `isPresent()` / `get()` 拆 |
-| `Packages.java.time.LocalDateTime` + `java.time.format.DateTimeFormatter` | 日期时间格式化（推荐） |
-| `Packages.java.text.SimpleDateFormat` | 老式时间格式化（运行时可用，d.ts 未声明、无补全） |
-| `Packages.java.io.File` | 文件对象。全局变量 `file` 就是当前脚本的 `File`；`FS.toRawFile(path)` 把相对路径转成 `File` |
-| `Packages.java.lang.Thread` | 线程（**慎用**，见下方警告） |
-
+## 实例
 格式化当前时间：
 
 ```javascript
@@ -366,14 +336,3 @@ Chat.log(`当前脚本: ${file.getAbsolutePath()}`)      // 全局变量 file
 const cfg = FS.toRawFile("config.json")               // 相对脚本文件夹
 Chat.log(`存在: ${cfg.exists()}, 大小: ${cfg.length()} 字节`)
 ```
-
-!!! warning "Thread.sleep 与手动开线程"
-    - 睡眠请用 `Time.sleep(millis)` 而不是 `Packages.java.lang.Thread.sleep(...)`：两者都阻塞当前线程，但 `Time.sleep` 是 JsMacros 提供的入口，配合脚本的中断/停止机制工作；游戏内等待更应该用 `Client.waitTick()`（见[时间与工具](time_utils.md)）。
-    - `new Thread(wrapper).start()` 虽然能跑（`Thread` 构造器在 d.ts 里就收 `MethodWrapper`），但这个线程**不归脚本上下文管**：脚本被停止时它不会被终止，异常也没人接。需要并行就开多个脚本/服务，或用 `methodToJavaAsync`，让 JsMacros 管理线程。
-
-## 相关页面
-
-- [常用类型](types.md)——JS/Java 类型互转、Helper 与 `getRaw()`、全局类型别名
-- [脚本上下文](script_context.md)——线程模型、joined、上下文保活、`deferCurrentTask` 的调度背景
-- [时间与工具](time_utils.md)——`Time`、`Utils`、`JavaUtils` 的日常用法
-- [外部 API 总览](external_api.md) / [Baritone API](baritone_api.md)——调其他 Mod 的 Java API

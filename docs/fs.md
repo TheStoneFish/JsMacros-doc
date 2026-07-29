@@ -8,7 +8,7 @@ icon: lucide/files
 
 ## 相对路径从哪里算起？
 
-d.ts 中几乎每个 `FS` 方法的 JSDoc 都写着同一句话：*relative to the script's folder*——**相对路径以"当前脚本文件所在的文件夹"为根目录**，而不是固定的 `Macros` 目录。
+*relative to the script's folder*——**相对路径以"当前脚本文件所在的文件夹"为根目录**，而不是固定的 `Macros` 目录。
 
 - 脚本直接放在 `Macros` 根目录下：两者是同一个地方，感觉不出区别。
 - 脚本放在 `Macros/my_scripts/` 子文件夹里：`FS.open("config.json")` 打开的是 `Macros/my_scripts/config.json`。
@@ -47,7 +47,7 @@ if (files) {
 
 | 方法 | 返回值 | 作用 |
 | --- | --- | --- |
-| `list(path)` | `JavaArray<string> \| null` | 列出目录中的文件名，失败返回 `null` |
+| `list(path)` | `JavaArray<string> | null` | 列出目录中的文件名，失败返回 `null` |
 | `exists(path)` | `boolean` | 路径是否存在 |
 | `isDir(path)` | `boolean` | 是否为目录 |
 | `isFile(path)` | `boolean` | 是否为文件 |

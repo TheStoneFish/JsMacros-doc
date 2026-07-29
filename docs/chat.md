@@ -15,14 +15,20 @@ icon: lucide/message-square
 
 自定义命令相关的 `getCommandManager()` 见 [自定义命令](commands.md)。
 
-## 输出到本地
+## 输出到本地聊天栏
 
 这些方法只在你自己的客户端显示，不会发出任何数据包，随便刷也不会被服务器踢。
 
 ```javascript
 Chat.log("只显示在本地聊天栏")
 Chat.log(Chat.createTextHelperFromString("也可以直接传 TextHelper"))
-Chat.logf("坐标: %.1f %.1f %.1f", 1.2, 64.0, -3.4)
+// 这里需要构建Java对象
+Chat.logf(
+    "坐标: %.1f %.1f %.1f",
+    Java.type("java.lang.Double").valueOf(1.2),
+    Java.type("java.lang.Double").valueOf(64.0),
+    Java.type("java.lang.Double").valueOf(-3.4)
+)
 Chat.logColor("&a绿色 &e黄色 &c红色 &l&6加粗金色")
 ```
 
@@ -36,16 +42,23 @@ Chat.logColor("&a绿色 &e黄色 &c红色 &l&6加粗金色")
 | `logColor(message, await)` | 同上，带 `await` |
 
 !!! tip "await 参数是什么"
-    聊天输出实际在主线程完成，脚本线程调用 `log` 后默认不等待。绝大多数脚本不需要关心；只有当你要求"这条消息必须已经显示，再执行下一步"（例如紧接着读聊天历史）时才传 `await=true`。
+    聊天输出实际在主线程完成，脚本线程调用 `log` 后默认不等待。绝大多数脚本不需要关心；只有当你要求"这条消息必须已经显示，再执行下一步"
 
-### 标题、ActionBar 和 Toast
+## 标题、ActionBar 和 Toast
 
 ```javascript
-Chat.title("大标题", "副标题", 10, 40, 10)   // 淡入 10t、停留 40t、淡出 10t
-Chat.actionbar("显示在物品栏上方")
-Chat.actionbar("带底色的提示", true)
-Chat.toast("JsMacros", "脚本已启动")
-Chat.toast("JsMacros", "显示 5 秒", 5000)
+// 淡入 10t、停留 40t、淡出 10t
+Chat.title('大标题', '副标题', 10, 40, 10)
+Chat.actionbar('显示在物品栏上方')
+Chat.actionbar('带底色的提示', true)
+// 通知需要在主线程运行
+Client.runOnMainThread(
+    JavaWrapper.methodToJava(() => {
+        Chat.toast('JsMacros', '脚本已启动')
+        Chat.toast('JsMacros', '显示 5 秒', 5000)
+    })
+)
+
 ```
 
 | 方法 | 说明 |
@@ -72,62 +85,31 @@ Chat.sayf("我在 %d, %d, %d", 100, 64, -200)
 | `sayf(message, await, ...args)` | 同上，带 `await` |
 
 !!! warning "say 是真实发包"
-    `Chat.say()` 和你亲手打字回车完全一样：消息以 `/` 开头就会执行命令，否则所有人都能看到。测试脚本时先用 `Chat.log()` 确认内容无误，再换成 `Chat.say()`。循环里高频 `say` 还可能触发服务器的刷屏检测。
+    `Chat.say()` 和你亲手打字回车完全一样：消息以 `/` 开头就会执行命令，否则所有人都能看到。
 
-### 打开聊天输入框
-
-```javascript
-Chat.open("/msg ")   // 打开聊天框并预填文本，等你补全后手动回车
-```
-
-| 方法 | 说明 |
-| --- | --- |
-| `open(message)` | 打开聊天输入框并预填 `message` |
-| `open(message, await)` | 带 `await` 重载 |
-
-官方 JSDoc 提示：可以配合 `JsMacros.waitForEvent("SendMessage")` 或 `JsMacros.once(...)` 等待玩家真正把消息发出去。
-
-## § 颜色代码速查表
-
-Minecraft 用 `§x` 控制颜色和格式。在脚本里推荐写 `&x` 然后用 `Chat.logColor` 或 `Chat.ampersandToSectionSymbol` 转换（源代码里直接打 `§` 容易出编码问题）。
-
-| 代码 | 颜色 | 代码 | 颜色 |
-| --- | --- | --- | --- |
-| `§0` | 黑色 black | `§8` | 深灰 dark_gray |
-| `§1` | 深蓝 dark_blue | `§9` | 蓝色 blue |
-| `§2` | 深绿 dark_green | `§a` | 绿色 green |
-| `§3` | 深青 dark_aqua | `§b` | 青色 aqua |
-| `§4` | 深红 dark_red | `§c` | 红色 red |
-| `§5` | 深紫 dark_purple | `§d` | 粉紫 light_purple |
-| `§6` | 金色 gold | `§e` | 黄色 yellow |
-| `§7` | 灰色 gray | `§f` | 白色 white |
-
-| 代码 | 格式 |
-| --- | --- |
-| `§k` | 乱码滚动（obfuscated / magic） |
-| `§l` | **加粗** |
-| `§m` | ~~删除线~~ |
-| `§n` | 下划线 |
-| `§o` | *斜体* |
-| `§r` | 重置全部格式 |
-
-!!! tip
-    颜色代码 `0`–`f` 正好对应十六进制 `0x0`–`0xf`，可以直接传给下文 `TextBuilder.withColor(int)`，例如金色是 `withColor(0x6)`、红色是 `withColor(0xc)`。
-
-### 格式代码转换工具
+## 格式代码转换工具
 
 ```javascript
 const raw = "&a你好 &l&6JsMacros"
-const section = Chat.ampersandToSectionSymbol(raw)   // &a → §a
-const back = Chat.sectionSymbolToAmpersand(section)  // §a → &a
-const plain = Chat.stripFormatting(section)          // 去掉全部格式代码
-const width = Chat.getTextWidth(plain)               // 渲染宽度（像素）
+Chat.log(`原始字符: ${raw}`)
+// &a → §a 把字符转换成颜色字符
+const section = Chat.ampersandToSectionSymbol(raw)  
+Chat.log(`转换后的字符: ${section}`)
+// §a → &a 还原成普通字符
+const back = Chat.sectionSymbolToAmpersand(section)
+Chat.log(`还原后的字符: ${back}`)
+ // 去掉全部格式代码
+const plain = Chat.stripFormatting(section)         
+Chat.log(`去除格式后的字符: ${plain}`)
+// 渲染宽度（像素）
+const width = Chat.getTextWidth(plain)    
+Chat.log(`文字渲染宽度: ${width}`)           
 ```
 
 | 方法 | 说明 |
 | --- | --- |
-| `ampersandToSectionSymbol(string)` | `&` 转 `§`；1.9.0 起 `&&` 会被转义为字面的 `&` |
-| `sectionSymbolToAmpersand(string)` | `§` 转 `&`；1.9.0 起会把 `&` 转义成 `&&` |
+| `ampersandToSectionSymbol(string)` | `&` 转 `§` |
+| `sectionSymbolToAmpersand(string)` | `§` 转 `&` |
 | `stripFormatting(string)` | 删除字符串中所有 `§x` 格式代码 |
 | `getTextWidth(text)` | 返回文本的渲染宽度（像素），可用于对齐 |
 
@@ -160,7 +142,6 @@ const width = Chat.getTextWidth(plain)               // 渲染宽度（像素）
 
 ```javascript
 JsMacros.on("RecvMessage", JavaWrapper.methodToJava((e) => {
-    if (!e.text) return
     Chat.log("纯文本: " + e.text.getStringStripFormatting())
     Chat.log("JSON: " + e.text.getJson())
 }))
@@ -257,13 +238,13 @@ Chat.log(btn)
 | `hasColor()` | boolean | 是否设置了颜色 |
 | `getColorIndex()` | number | 颜色索引（0–15），没有颜色返回 `-1` |
 | `getColorValue()` | number | RGB 颜色值，没有返回 `-1` |
-| `getColorName()` | string \| null | 颜色名，如 `"gold"` |
-| `getFormatting()` | FormattingHelper \| null | 对应的格式对象 |
+| `getColorName()` | string | null | 颜色名，如 `"gold"` |
+| `getFormatting()` | FormattingHelper | null | 对应的格式对象 |
 | `hasCustomColor()` / `getCustomColor()` | boolean / number | 自定义（非 16 色）颜色 |
 | `bold()` / `italic()` / `underlined()` / `strikethrough()` / `obfuscated()` | boolean | 五种格式开关 |
-| `getClickAction()` | string \| null | 点击动作，可能是上表 6 种之一或 `"custom"` |
-| `getClickValue()` | string \| null | 点击动作的 value |
-| `getCustomClickValue()` | Runnable \| null | 自定义点击回调 |
+| `getClickAction()` | string | null | 点击动作，可能是上表 6 种之一或 `"custom"` |
+| `getClickValue()` | string | null | 点击动作的 value |
+| `getCustomClickValue()` | Runnable | null | 自定义点击回调 |
 | `getHoverAction()` / `getHoverValue()` | — | 悬停动作与内容 |
 | `getInsertion()` | string | Shift+点击时插入聊天框的文本 |
 | `getColor()` | number | 已弃用，改用 `getColorIndex()` |
@@ -320,9 +301,6 @@ logger.info("这行只出现在 latest.log 和控制台里")
 logger.warn("警告级别")
 ```
 
-!!! note
-    2.1.0 的 `Chat` 没有直接写"聊天记录文件"的方法，需要持久化聊天内容请配合 [文件系统 FS](fs.md) 自己写文件。
-
 ## 实用示例
 
 ### 例 1：RecvMessage 过滤广告
@@ -333,11 +311,11 @@ logger.warn("警告级别")
 // 建议保存为服务(Service)常驻运行
 const AD_WORDS = ["低价代练", "点击领取", "www."]
 
-JsMacros.on("RecvMessage", true, JavaWrapper.methodToJava((e) => {
-    if (!e.text) return
+JsMacros.on("RecvMessage", true, JavaWrapper.methodToJava((e) => {  
     const msg = e.text.getStringStripFormatting()
     if (AD_WORDS.some((w) => msg.includes(w))) {
-        e.cancel() // 这条消息不会显示
+        // 这条消息不会显示
+        e.cancel() 
         Chat.getLogger("ad-filter").info("已拦截: " + msg)
     }
 }))
@@ -349,8 +327,9 @@ JsMacros.on("RecvMessage", true, JavaWrapper.methodToJava((e) => {
 
 ```javascript
 JsMacros.on("SendMessage", true, JavaWrapper.methodToJava((e) => {
-    if (e.message == null || !e.message.startsWith(".")) return
-    e.cancel() // 拦下来，服务器收不到
+    if (!e.message.startsWith(".")) return
+    // 拦下来，服务器收不到
+    e.cancel() 
 
     const parts = e.message.substring(1).split(" ")
     switch (parts[0]) {

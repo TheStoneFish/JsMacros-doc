@@ -49,7 +49,7 @@ while (true) {
 ```
 
 !!! warning "别在主线程会等待的事件里 waitTick"
-    有些事件（如 joined 模式注册的监听）本身在主线程上阻塞执行。此时再调用 `Client.waitTick()` 就是"主线程等脚本、脚本等主线程"的循环等待，会把游戏卡死。d.ts 原注释：*don't use this on an event that the main thread waits on (joins)... that'll cause circular waiting*。
+    有些事件（如 joined 模式注册的监听）本身在主线程上阻塞执行。此时再调用 `Client.waitTick()` 就是"主线程等脚本、脚本等主线程"的循环等待，会把游戏卡死。*don't use this on an event that the main thread waits on (joins)... that'll cause circular waiting*。
 
 ### runOnMainThread
 
@@ -166,7 +166,7 @@ Client.pingAsync("example.com", JavaWrapper.methodToJava((info, err) => {
 | --- | --- | --- |
 | `isModLoaded(modId: string)` | `boolean` | 指定 Mod 是否已加载 |
 | `getLoadedMods()` | `JavaList<ModContainerHelper>` | 所有已加载 Mod |
-| `getMod(modId: string)` | `ModContainerHelper \| null` | 指定 Mod 的容器，未加载返回 `null` |
+| `getMod(modId: string)` | `ModContainerHelper | null` | 指定 Mod 的容器，未加载返回 `null` |
 
 ```javascript
 if (Client.isModLoaded("jsmacros")) {
@@ -251,18 +251,6 @@ reg.getEnchantmentIds().forEach(id => Chat.log(id))
 | `RegistryHelper.parseIdentifier(id)` | 字符串转原始 `Identifier` |
 | `RegistryHelper.parseNameSpace(id)` | 取出 id 的命名空间部分 |
 
-## 剪贴板
-
-| 方法 | 说明 |
-| --- | --- |
-| `getClipboard(): string` | 读取系统剪贴板 |
-| `setClipboard(text: string)` | 写入系统剪贴板 |
-
-```javascript
-Client.setClipboard("复制到剪贴板")
-Chat.log(Client.getClipboard())
-```
-
 ## 退出游戏
 
 | 方法 | 说明 |
@@ -290,21 +278,3 @@ Client.exitGamePeacefully()
 
 !!! warning "高级危险区"
     网络包 API 很容易触发反作弊或造成客户端状态不同步。除非你清楚包结构和服务端规则，否则不要在多人服务器里使用。
-
-## 生成 TypeScript 类型文件
-
-给编辑器补全用的 `McIdsAndEnums.d.ts`（包含物品/方块 id、枚举等字面量类型）可以用脚本自己生成：
-
-| 签名 | 说明 |
-| --- | --- |
-| `generateTypescriptIdsAndEnums(): string` | 生成内容并作为字符串返回 |
-| `generateTypescriptIdsAndEnums(full: boolean): string` | `full` 为 `true` 时额外扫描 jar 生成屏幕类（用 ASM，较慢） |
-| `generateTypescriptIdsAndEnums(file): void` | 直接写入 `FS.open()` 打开的文件 |
-| `generateTypescriptIdsAndEnums(file, full: boolean): void` | 写入文件并附带屏幕类 |
-
-```javascript
-const file = FS.open("./McIdsAndEnums.d.ts")
-file.write("") // 该方法不会自动清空文件，先手动清空
-Client.generateTypescriptIdsAndEnums(file)
-Chat.log("已生成 McIdsAndEnums.d.ts")
-```

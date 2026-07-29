@@ -46,6 +46,8 @@ JsMacros 会在每个脚本里注入一批全局对象，不需要 `import`，�
 | --- | --- |
 | 在聊天栏输出调试信息 / 发送聊天和命令 | [聊天与文本](chat.md) |
 | 监听聊天消息并做出反应 | [事件系统](events.md)（`RecvMessage`）|
+| 查全部事件的名称/参数/方法 | [全部事件参考](events_reference.md) |
+| 给高频事件加过滤条件、降低开销 | [事件系统](events.md) |
 | 写一个能"按一次开、再按一次关"的脚本 | [脚本模板](script_template.md)、[全局变量共享](globals.md) |
 | 自动点击容器、整理背包、丢物品 | [背包](inventory.md) |
 | 自动挖矿、走路、转头、攻击 | [交互](interaction.md)、[玩家](player.md) |
@@ -62,5 +64,4 @@ JsMacros 会在每个脚本里注入一批全局对象，不需要 `import`，�
 | 监听 / 修改网络数据包 | [数据包](packets.md) |
 | 调用任意 Java 类或其他 Mod 的 API | [Java 与反射](java_api.md)、[外部 API 总览](external_api.md) |
 | 让 Baritone 帮我寻路 | [Baritone API](baritone_api.md) |
-| 给高频事件加过滤器减少开销 | [事件过滤器](event_filters.md) |
 | 理解线程、joined、看门狗 | [脚本上下文](script_context.md) |

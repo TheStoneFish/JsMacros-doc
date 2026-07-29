@@ -6,7 +6,7 @@ icon: lucide/braces
 
 JsMacros 脚本运行在 JVM 上，代码里会混用三种东西：普通 JS 值、Java 对象、以及 JsMacros 自己的 Helper 包装。理解这套类型系统，比死背方法更重要——它能解释"为什么这个返回值不能当字符串用"、"为什么这个列表没有 forEach"。
 
-## Helper 包装哲学
+## Helper 包装
 
 Minecraft 内部的对象（玩家、物品、方块）是原始 Java 对象，方法名混乱、跨版本变动大。JsMacros 的做法是给它们套一层 **Helper**：
 
@@ -91,7 +91,7 @@ const rawPlayer = Player.getPlayer().getRaw()
 
 风险要想清楚再用：
 
-- **名字对不上**：d.ts 注释里的 `net.minecraft.*` 类名和方法名是开发映射下的名字，正式游戏环境里这些类是混淆过的（中间名），直接按源码里的方法名调用很可能找不到方法；
+- **名字对不上**: `net.minecraft.*` 类名和方法名是开发映射下的名字，正式游戏环境里这些类是混淆过的（中间名），直接按源码里的方法名调用很可能找不到方法；
 - **跨版本碎一地**：原始对象的结构随 Minecraft 版本变化，Helper 层会帮你兜住，raw 层不会；
 - **绕过安全包装**：Helper 有判空和线程方面的处理，raw 对象没有。
 

@@ -11,7 +11,7 @@ icon: lucide/rocket
 !!! warning "1.21.1 及以上版本注意"
     Modrinth 上的官方构建可能落后于最新 Minecraft 版本。对于 >= 1.21.1，可以从 GitHub 构建源码；如果游戏版本没有重大变化，也可以尝试修改 jar 内的 `fabric.mod.json` 版本限制；或者把仓库 fork 下来用 GitHub Action 构建。
 
-从 [Modrinth](https://modrinth.com/mod/jsmacros) 获取 [JsMacros](https://modrinth.com/mod/jsmacros)，像普通 Fabric 模组一样放进 `mods` 文件夹即可。**。
+从 [Modrinth](https://modrinth.com/mod/jsmacros) 获取 [JsMacros](https://modrinth.com/mod/jsmacros)，像普通 Fabric 模组一样放进 `mods` 文件夹即可。
 
 ## 目录结构
 
@@ -51,7 +51,7 @@ npm install
 code .
 ```
 
-克隆后使用 VSCode 打开并安装依赖，即可看到类型提示和代码补全等功能。输入 `Chat.` 时弹出的方法列表，就来自 `JsMacros-2.1.0.d.ts` 类型定义文件。
+克隆后使用 VSCode 打开并安装依赖，即可看到类型提示和代码补全等功能。输入 `Chat.` 时弹出的方法列表。
 
 ![](https://img.mynotes.world//202602262111399.png)
 

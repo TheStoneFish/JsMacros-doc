@@ -4,7 +4,7 @@ icon: lucide/database
 
 # 全局变量共享（GlobalVars）
 
-`GlobalVars` 是所有脚本共享的一块内存空间（d.ts 原注释：*"Global" variables for passing to other contexts*，即"用于传递给其他上下文的全局变量"）。它最适合做**开关、计数器、简单缓存和跨脚本状态**。
+`GlobalVars` 是所有脚本共享的一块内存空间（*"Global" variables for passing to other contexts*，即"用于传递给其他上下文的全局变量"）。它最适合做**开关、计数器、简单缓存和跨脚本状态**。
 
 ## 生命周期
 
@@ -19,10 +19,10 @@ icon: lucide/database
 
 | 写入 | 读取 | 类型 |
 | --- | --- | --- |
-| `putInt(name, i)` | `getInt(name): number \| null` | 整数 |
-| `putString(name, str)` | `getString(name): string \| null` | 字符串 |
-| `putDouble(name, d)` | `getDouble(name): number \| null` | 浮点数 |
-| `putBoolean(name, b)` | `getBoolean(name): boolean \| null` | 布尔值 |
+| `putInt(name, i)` | `getInt(name): number | null` | 整数 |
+| `putString(name, str)` | `getString(name): string | null` | 字符串 |
+| `putDouble(name, d)` | `getDouble(name): number | null` | 浮点数 |
+| `putBoolean(name, b)` | `getBoolean(name): boolean | null` | 布尔值 |
 | `putObject(name, o)` | `getObject(name): any` | 任意对象 |
 
 ```javascript
@@ -130,17 +130,19 @@ Chat.log(GlobalVars.getInt("hits"))              // 2
 
 | 方法 | 返回值 | 作用 |
 | --- | --- | --- |
-| `getType(name)` | `string \| null` | 查看键的值类型，返回 `Int`、`String`、`Double`、`Boolean`、`Object` 或 `null` |
+| `getType(name)` | `string | null` | 查看键的值类型，返回 `Int`、`String`、`Double`、`Boolean`、`Object` 或 `null` |
 | `remove(key)` | `void` | 删除一个键 |
 | `getRaw()` | `JavaMap<string, any>` | 取底层的 Java Map |
 
 ```javascript
 GlobalVars.putBoolean("enabled", true)
-Chat.log(GlobalVars.getType("enabled"))  // Boolean
+// Boolean
+Chat.log(GlobalVars.getType("enabled"))  
 GlobalVars.remove("enabled")
 
 const raw = GlobalVars.getRaw()
-Chat.log(raw.keySet())                   // 当前所有键
+// 当前所有键
+Chat.log(raw.keySet())                   
 ```
 
 ## 脚本间通信
@@ -150,14 +152,16 @@ Chat.log(raw.keySet())                   // 当前所有键
 发送方：
 
 ```javascript
+// 数据直接随事件传递
 const e = JsMacros.createCustomEvent("MyRelay")
-e.putString("msg", "有人靠近了！")   // 数据直接随事件传递
+e.putString("msg", "有人靠近了！")   
 e.trigger()
 ```
 
 接收方（常驻脚本或[服务](services.md)）：
 
 ```javascript
+const e = JsMacros.createCustomEvent("MyRelay")
 JsMacros.on("MyRelay", JavaWrapper.methodToJava((event) => {
     Chat.log("收到消息: " + event.getString("msg"))
 }))

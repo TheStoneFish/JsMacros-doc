@@ -44,7 +44,7 @@ if (inv.is("Enchanting Table")) {
 
 ### 类型名对照全表（InvNameToTypeMap）
 
-`getType()` / `is()` 使用的类型名与对应子类如下（逐一对照 d.ts 的 `InvNameToTypeMap`）：
+`getType()` / `is()` 使用的类型名与对应子类如下：
 
 | 类型名 | 对应子类 | 常见界面 |
 | --- | --- | --- |
@@ -79,28 +79,14 @@ Chat.log(`总槽位: ${inv.getTotalSlots()}  syncId: ${inv.getCurrentSyncId()}`)
 
 const map = inv.getMap()
 for (const section of map.keySet()) {
-    const slots = Java.from(map.get(section))
+    const slots = map.get(section)
     Chat.log(`[${section}] ${slots.length} 格: ${slots.join(", ")}`)
 }
 ```
 
-!!! tip "排查服务器菜单的刚需脚本"
-    上面这段就是"菜单界面透视镜"：打开任意服务器菜单后运行一次，把每个分区名和槽位号都打印出来，再决定点哪个格子。配合下面的"打印每格物品"更直观：
-
-    ```javascript
-    const inv = Player.openInventory()
-    const total = inv.getTotalSlots()
-    for (let i = 0; i < total; i++) {
-        const stack = inv.getSlot(i)
-        if (!stack.isEmpty()) {
-            Chat.log(`#${i} [${inv.getLocation(i)}] ${stack.getItemId()} x${stack.getCount()}`)
-        }
-    }
-    ```
-
 ### 分区名全表（InvMapType）
 
-`getMap()` 返回 `JavaMap<分区名, 槽位号数组>`。各界面拥有的分区（逐一对照 d.ts 的 `InvMapType` 命名空间）：
+`getMap()` 返回 `JavaMap<分区名, 槽位号数组>`。各界面拥有的分区：
 
 | 界面 | 分区名 |
 | --- | --- |
@@ -123,23 +109,26 @@ for (const section of map.keySet()) {
 
 ```javascript
 const inv = Player.openInventory()
-const hotbarSlots = inv.getSlots("hotbar")            // 分区 -> 槽位号数组
-const where = inv.getLocation(hotbarSlots[0])         // 槽位号 -> 分区名
-const free = inv.findFreeSlot("main", "hotbar")       // 指定分区找空槽
+// 分区 -> 槽位号数组
+const hotbarSlots = inv.getSlots("hotbar")           
+// 槽位号 -> 分区名
+const where = inv.getLocation(hotbarSlots[0])        
+// 指定分区找空槽
+const free = inv.findFreeSlot("main", "hotbar")       
 ```
 
 | 方法 | 返回 | 说明 |
 | --- | --- | --- |
 | `getMap()` | `JavaMap<InvMapId, number[]>` | 分区名 → 槽位号数组 |
 | `getSlots(...mapIdentifiers)` | `number[]` | 取一个或多个分区的全部槽位号 |
-| `getLocation(slotNum)` | `string \| null` | 槽位属于哪个分区 |
+| `getLocation(slotNum)` | `string | null` | 槽位属于哪个分区 |
 | `getSlotPos(slot)` | `Pos2D` | 槽位在屏幕上的 x/y 坐标 |
 | `getSlotUnderMouse()` | `number` | 鼠标当前指向的槽位号 |
 | `getTotalSlots()` | `number` | 界面总槽位数 |
 
 ## Inventory 基类方法参考
 
-以下方法所有容器通用。除注明外，返回 `Inventory` 的方法都返回自身，可以链式调用。
+以下方法所有容器通用。
 
 ### 读取槽位与物品
 
@@ -194,12 +183,16 @@ Chat.log(`泥土所在槽位: ${dirtSlots.join(", ")}`)
 
 ```javascript
 const inv = Player.openInventory()
-
-inv.quick(10)           // shift 点击 10 号槽
-inv.click(11)           // 左键点击
-inv.click(12, 1)        // 右键点击（拿起一半 / 放下一个）
-inv.swapHotbar(13, 0)   // 13 号槽与快捷栏 0 号位交换
-inv.dropSlot(14, true)  // 丢出整组
+// shift 点击 10 号槽
+inv.quick(10)           
+// 左键点击
+inv.click(11)           
+// 右键点击（拿起一半 / 放下一个）
+inv.click(12, 1)       
+// 13 号槽与快捷栏 0 号位交换 
+inv.swapHotbar(13, 0)  
+// 丢出整组
+inv.dropSlot(14, true)  
 ```
 
 ### 打开、关闭与其他
@@ -212,12 +205,10 @@ inv.dropSlot(14, true)  // 丢出整组
 | `getRawContainer()` | `IScreen` | 底层界面对象（进阶用，见 [界面与GUI](screen.md)） |
 | `getCurrentSyncId()` | `number` | 当前界面的同步 ID；服务器换菜单页时会变，可用来确认没点到旧界面 |
 
-!!! warning "操作前先确认界面还在"
-    连续操作容器时，服务器可能随时关闭/切换界面。批量点击前先核对 `getContainerTitle()` 或 `getCurrentSyncId()`，循环中穿插 `Client.waitTick(1)`，避免把点击发到已经关闭的旧界面上。
 
 ## 点击模式详解
 
-Minecraft 协议里每次容器点击都有一个 `mode`（见 [wiki.vg 的 Click Window](https://wiki.vg/Protocol#Click_Container)）。`Inventory` 的各个方法就是这些模式的封装，`ClickSlot` 事件里的 `mode` 字段也用同一套编号：
+Minecraft 协议里每次容器点击都有一个 `mode`。`Inventory` 的各个方法就是这些模式的封装，`ClickSlot` 事件里的 `mode` 字段也用同一套编号：
 
 | mode | 协议名 | 游戏内操作 | 对应方法 |
 | --- | --- | --- | --- |
@@ -228,12 +219,6 @@ Minecraft 协议里每次容器点击都有一个 `mode`（见 [wiki.vg 的 Clic
 | 4 | THROW | Q（丢 1 个）/ Ctrl+Q（丢整组） | `dropSlot(slot, false/true)` |
 | 5 | QUICK_CRAFT | 按住左/右键拖动 | `dragClick(slots, 0或1)` |
 | 6 | PICKUP_ALL | 双击 | `grabAll(slot)` |
-
-新手最常用的三招：
-
-- **搬运一整组**：`quick(slot)`，物品自动去另一侧。
-- **拿一半 / 放一个**：`click(slot, 1)` 右键。
-- **精确放到某格**：先 `click(来源槽)` 拿起，再 `click(目标槽)` 放下。
 
 ## 容器子类速查
 
@@ -301,7 +286,7 @@ if (inv.is("Survival Inventory")) {
 | `getCraftingWidth()` / `getCraftingHeight()` / `getCraftingSlotCount()` | `number` | 合成区尺寸信息 |
 | `getCategory()` | `string` | 配方书分类 |
 | `getCraftableRecipes()` | `JavaList<RecipeHelper>` | 当前材料能合成的配方 |
-| `getRecipes(craftable)` | `JavaList<RecipeHelper> \| null` | 配方列表；`true` 只列可合成的 |
+| `getRecipes(craftable)` | `JavaList<RecipeHelper> | null` | 配方列表；`true` 只列可合成的 |
 | `isRecipeBookOpened()` | `boolean` | 配方书是否展开 |
 | `toggleRecipeBook()` / `setRecipeBook(open)` | `void` | 开关配方书 |
 
@@ -385,7 +370,9 @@ const inv = Player.openInventory()
 if (inv.is("Anvil")) {
     inv.setName("我的神剑")
     Chat.log(`花费等级: ${inv.getLevelCost()}`)
-    inv.quick(inv.getSlots("output")[0])  // shift 取出成品
+    // shift 取出成品 实际这里应该等待一下output出现 可以用循环等待
+    Client.waitTick(2)
+    inv.quick(inv.getSlots("output")[0])  
 }
 ```
 
@@ -472,7 +459,7 @@ if (inv.is("Stonecutter")) {
 | 方法 | 返回 | 说明 |
 | --- | --- | --- |
 | `getLevel()` | `number` | 信标层数（1~4） |
-| `getFirstEffect()` / `getSecondEffect()` | `string \| null` | 当前主 / 副效果 ID |
+| `getFirstEffect()` / `getSecondEffect()` | `string | null` | 当前主 / 副效果 ID |
 | `selectFirstEffect(id)` / `selectSecondEffect(id)` | `boolean` | 选择主 / 副效果（效果 ID，如 `minecraft:speed`） |
 | `applyEffects()` | `boolean` | 点击确认按钮应用效果 |
 
@@ -597,14 +584,9 @@ JsMacros.on("OpenContainer", JavaWrapper.methodToJava((e, ctx) => {
     Chat.log(`打开容器: "${title}" 类型: ${inv.getType()}`)
 
     if (title.includes("签到")) {
-        Client.waitTick(10)   // 等服务器把按钮物品填进菜单
         const slots = inv.findItem("minecraft:emerald")
-        if (slots.length > 0) {
-            inv.click(slots[0])
-            Chat.log(`已点击签到按钮（槽位 ${slots[0]}）`)
-        } else {
-            Chat.log("没找到绿宝石按钮，请用调试脚本重新确认")
-        }
+        inv.click(slots[0])
+        Chat.log(`已点击签到按钮（槽位 ${slots[0]}）`)
     }
 }))
 ```
@@ -647,11 +629,3 @@ if (!inv.is("Enchanting Table")) {
     - `swap()` 已弃用且在服务器上不可靠，用 `swapHotbar()` 代替。
     - 操作前用 `getCurrentSyncId()` / `getContainerTitle()` 确认界面没被切换，服务器换菜单页时旧槽位号全部失效。
     - 自动化交易、自动点菜单是否违规取决于服务器规则，使用前请自行确认。
-
-## 相关页面
-
-- [物品与NBT](items.md)：`ItemStackHelper` 的名称、NBT、耐久、附魔读取
-- [玩家](player.md)：`Player` 其余方法、主手交互
-- [事件系统](events.md)：事件监听、joined 回调与取消事件
-- [按键绑定](keybind.md)：把清理脚本绑到快捷键
-- [界面与GUI](screen.md)：`getRawContainer()` 返回的界面对象

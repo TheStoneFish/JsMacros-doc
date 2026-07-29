@@ -46,7 +46,7 @@ Client.getGameOptions().video.setMaxFps(120).getParent().saveOptions()
     所有 setter 只改内存中的值。**`saveOptions()` 会把设置写入 `options.txt`**，不调用的话有些改动重启就丢，部分选项甚至不立刻生效。养成习惯：一串 set 之后补一个 `saveOptions()`。
 
 !!! tip "sendSyncedOptions：让服务器知道你改了设置"
-    皮肤图层、（服务端可见的）语言这类设置需要同步给服务器。正常游戏里这发生在关闭设置界面时，但脚本不开界面，所以要手动调 `opts.sendSyncedOptions()`（2.0.0+）。
+    皮肤图层、（服务端可见的）语言这类设置需要同步给服务器。正常游戏里这发生在关闭设置界面时，但脚本不开界面，所以要手动调 `opts.sendSyncedOptions()`。
 
 ## OptionsHelper 主类
 
@@ -99,21 +99,6 @@ Chat.log(`已启用: ${opts.getEnabledResourcePacks()}`)
 | `getWidth()` / `getHeight()` | 当前窗口宽 / 高（像素） |
 | `setWidth(w)` / `setHeight(h)` / `setSize(w, h)` | 调整窗口尺寸 |
 
-### 已废弃的旧方法
-
-这些方法还能用，但都有更清晰的替代品，新脚本别再写：
-
-| 旧方法 | 改用 |
-| --- | --- |
-| `getCloudMode()` / `setCloudMode(mode)` | `video.getCloudsMode()` / `setCloudsMode(mode)` |
-| `getGraphicsMode()` / `setGraphicsMode(mode)` | `video.getGraphicsMode()` / `setGraphicsMode(mode)` |
-| `getRenderDistance()` / `setRenderDistance(d)` | `video.getRenderDistance()` / `setRenderDistance(radius)` |
-| `getGamma()` / `setGamma(gamma)` | `video.getGamma()` / `setGamma(gamma)` |
-| `getGuiScale()` / `setGuiScale(scale)` | `video.getGuiScale()` / `setGuiScale(scale)` |
-| `isRightHanded()` / `setRightHanded(val)` | `skin.isRightHanded()` / `toggleMainHand(hand)` |
-| `setVolume(vol)` | `music.setMasterVolume(volume)` |
-| `setVolume(category, volume)` | `music.setVolume(category, volume)` |
-| `getVolume(category)` / `getVolumes()` | `music.getVolume(category)` / `getVolumes()` |
 
 ## 视频设置 VideoOptionsHelper
 
@@ -296,9 +281,6 @@ opts.saveOptions()
 
 一部分选项（自动跳跃、切换潜行/疾跑、聊天外观）和控制、聊天分类是同一份设置的两个入口，改哪边效果一样。
 
-!!! note "d.ts 里的一个小坑"
-    `setFovEffect` 在 d.ts 中有一个多出来的 `boolean` 重载，紧跟在 `areLightningFlashesHidden()` 之后，疑似是"隐藏闪电闪光"的 setter 被错误命名。传 `double` 的版本才是正经的 FOV 效果设置。
-
 ## 枚举字符串速查
 
 这些参数类型本质都是固定字符串（或小整数），传错会不生效或报错：
@@ -316,8 +298,6 @@ opts.saveOptions()
 | `Trit` | `0` `1` `2` | `setCameraMode`（0 第一人称，2 正面） |
 | `SoundCategory` | 原版分类：`"master"` `"music"` `"record"` `"weather"` `"block"` `"hostile"` `"neutral"` `"player"` `"ambient"` `"voice"` | `music.getVolume` / `setVolume` |
 
-!!! tip "SoundCategory 等类型来自生成文件"
-    `SoundCategory`、`Key`、`Bind`、`KeyCategory`、`Locale` 这些类型定义在自动生成的 `McIdsAndEnums.d.ts` 里（用 `Client.generateTypescriptIdsAndEnums()` 生成，见 [客户端](client.md)），上表列的是原版取值。
 
 ## 完整示例：一键"性能模式"
 
@@ -326,9 +306,9 @@ opts.saveOptions()
 const opts = Client.getGameOptions()
 
 opts.video
-    .setGraphicsMode("fast")
-    .setCloudsMode("off")
-    .setParticleMode("minimal")
+    .setGraphicsMode('fast')
+    .setCloudsMode('off')
+    .setParticleMode('minimal')
     .setRenderDistance(8)
     .setSimulationDistance(8)
     .setMaxFps(60)
@@ -338,5 +318,5 @@ opts.video
 opts.music.setMusicVolume(0)
 opts.saveOptions()
 
-Chat.log("§a性能模式已开启")
+Chat.log('§a性能模式已开启')
 ```

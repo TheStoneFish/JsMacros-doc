@@ -4,8 +4,7 @@ icon: lucide/axis-3d
 
 # 位置与向量
 
-JsMacros 里所有"坐标"相关的东西都绕不开这五个类：`Pos2D`、`Pos3D`（点）、`Vec2D`、`Vec3D`（向量）和 `BlockPosHelper`（整数方块坐标）。本页按 `JsMacros-2.1.0.d.ts` 逐一核对了它们的全部方法，并给出实战几何套路：算距离、判断"在不在我面前"、算朝向某点的 yaw/pitch、HUD 方位显示。
-
+JsMacros 里所有"坐标"相关的东西都绕不开这五个类：`Pos2D`、`Pos3D`（点）、`Vec2D`、`Vec3D`（向量）和 `BlockPosHelper`（整数方块坐标）。
 ## 三种类型，各管一摊
 
 | 类型 | 是什么 | 坐标精度 | 典型来源 |
@@ -177,9 +176,6 @@ Chat.log(`x=${above.x}, y=${above.getY()}, z=${above.z}`)
 | `toMojangFloatVector()` | `org.joml.Vector3f` | 转原版 JOML 向量，与原版/渲染代码互操作用 |
 | `compareTo(o)` | `number` | 排序比较用 |
 
-!!! note "getYaw() / getPitch() 的废弃标记"
-    d.ts 中无参的 `getYaw()` / `getPitch()` 被标记为废弃，推荐的新签名 `getYaw(mathHelper)` / `getPitch(mathHelper)` 需要一个 `IMathHelper` 实例——但脚本环境里并没有现成的获取入口，所以**脚本里继续用无参版本即可**。如果哪天它被移除，可以手算（MC 角度约定见下文"实用几何"）：
-
     ```javascript
     const dx = vec.getDeltaX(), dy = vec.getDeltaY(), dz = vec.getDeltaZ()
     const yaw = Math.atan2(-dx, dz) * 180 / Math.PI
@@ -227,9 +223,6 @@ const bp = PositionCommon.createBlockPos(Math.floor(pos.x), Math.floor(pos.y), M
 ```
 
 ## 方向字符串（Direction）
-
-不少 API 的方向参数是字符串，d.ts 里定义为：
-
 ```ts
 type Direction = "up" | "down" | "north" | "south" | "east" | "west"
 ```
@@ -385,10 +378,3 @@ JsMacros.on("Tick", JavaWrapper.methodToJava(() => {
 
 !!! tip "想在世界里直接画出目标？"
     用 `Hud.createDraw3D()` 在目标点画方框/连线更直观，见 [HUD 渲染](hud.md)的 Draw3D 部分。
-
-## 相关页面
-
-- [玩家](player.md)——`Player.getPlayer()`、`lookAt`、射线检测
-- [实体](entities.md)——`getPos()` / `getEyePos()` / `distanceTo` 等实体侧方法
-- [方块](blocks.md)——`BlockPosHelper` 完整方法表与世界方块操作
-- [HUD 渲染](hud.md)——Draw2D / Draw3D 的完整用法

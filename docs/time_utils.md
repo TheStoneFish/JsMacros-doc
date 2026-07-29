@@ -6,8 +6,6 @@ icon: lucide/clock
 
 `Time` 和 `Utils` 是 JsMacros 的杂项工具库：它们不直接操作游戏世界，但计时、睡眠、哈希、Base64、猜测聊天发送者这些"周边活"都靠它们。本页把两个库的方法**逐一列全**，并重点讲清新手最容易踩坑的 `Time.sleep()`。
 
-!!! note "剪贴板不在 Utils 里"
-    网上一些老教程会写 `Utils.copyToClipboard(...)` 或 `FUtils`——从 JsMacros 2.0.0 起，剪贴板方法已经**移到了 `Client` 库**（`Client.getClipboard()` / `Client.setClipboard()`）。本页 [剪贴板](#clientsetclipboard) 一节有完整实战。
 
 ## Time
 
@@ -119,13 +117,13 @@ function safeSleep(totalMs, step) {
 | 方法 | 返回值 | 说明 |
 | --- | --- | --- |
 | `hashString(message)` | `string` | 用 SHA-256 哈希字符串，十六进制输出 |
-| `hashString(message, algorithm)` | `string \| null` | 指定算法哈希，十六进制输出；算法名无效时返回 `null` |
-| `hashString(message, algorithm, base64)` | `string \| null` | 同上，`base64` 为 `true` 时以 Base64 编码输出 |
+| `hashString(message, algorithm)` | `string | null` | 指定算法哈希，十六进制输出；算法名无效时返回 `null` |
+| `hashString(message, algorithm, base64)` | `string | null` | 同上，`base64` 为 `true` 时以 Base64 编码输出 |
 | `encode(message)` | `string` | Base64 编码 |
 | `decode(message)` | `string` | Base64 解码 |
 | `requireNonNull(obj)` | `T` | `obj` 非空则原样返回，为 `null` 则抛 `NullPointerException` |
 | `requireNonNull(obj, message)` | `T` | 同上，抛出的异常带自定义消息 |
-| `guessName(text)` | `string \| null` | 猜测一条聊天消息的发送者名字，猜不出返回 `null` |
+| `guessName(text)` | `string | null` | 猜测一条聊天消息的发送者名字，猜不出返回 `null` |
 | `guessNameAndRoles(text)` | `JavaList<string>` | 猜测发送者的名字及头衔/身份组，猜不出返回空列表 |
 
 `algorithm` 可选值：`sha1`、`sha256`、`sha384`、`sha512`、`md2`、`md5`。
@@ -183,14 +181,12 @@ JsMacros.on("RecvMessage", JavaWrapper.methodToJava((e, ctx) => {
 !!! warning "只是'猜'"
     官方注释明确说了 *this is not guaranteed to work*。它对常见格式命中率不错，但对格式特殊的服务器，**用正则自己解析更可靠**。把它当省事的默认方案，不要当唯一方案。
 
-## 剪贴板：Client.setClipboard
-
-剪贴板方法在 `Client` 库中（2.0.0 起从旧的 `FUtils` 移入）：
+## Utils.setClipboard
 
 | 方法 | 返回值 | 说明 |
 | --- | --- | --- |
-| `Client.getClipboard()` | `string` | 读取系统剪贴板内容 |
-| `Client.setClipboard(text)` | `void` | 把 `text` 写入系统剪贴板 |
+| `Utils.getClipboard()` | `string` | 读取系统剪贴板内容 |
+| `Utils.setClipboard(text)` | `void` | 把 `text` 写入系统剪贴板 |
 
 ### 实战：复制容器标题 + 鼠标下槽位 id
 
@@ -229,11 +225,9 @@ Chat.say(`我在 ${Client.getClipboard()}`)
 !!! note "打开文件 / 网址"
     `JsMacros.open(path)`（用系统默认程序打开文件）和 `JsMacros.openUrl(url)`（打开网址）在 2.1.0 中仍然可用，但已被标记为 **deprecated**。偶尔用用没问题，别在新脚本里重度依赖。
 
-## JavaUtils 与 JavaWrapper（简要）
-
 这两个库属于 Java 互操作的范畴，详细讲解在 [Java 与反射](java_api.md)，这里只留速查表。
 
-**JavaUtils** —— 创建 Java 集合与随机数：
+## Java 集合与随机数：
 
 ```javascript
 const list = JavaUtils.createArrayList()
@@ -256,27 +250,3 @@ Chat.log(random.nextInt(100))
 | `getHelperFromRaw(raw)` | 原始 Minecraft 对象转 helper，无对应 helper 时返回 `null` |
 | `arrayToString(array)` | 数组转字符串 |
 | `arrayDeepToString(array)` | 多维数组转字符串 |
-
-**JavaWrapper** —— 把 JS 函数包装成 Java 可调用对象，事件监听、HUD 回调都离不开它：
-
-```javascript
-JsMacros.on("Tick", JavaWrapper.methodToJava((e, ctx) => {
-    // ...
-}))
-```
-
-| 方法 | 作用 |
-| --- | --- |
-| `methodToJava(fn)` | 同步包装 |
-| `methodToJavaAsync(fn)` | 异步包装 |
-| `methodToJavaAsync(priority, fn)` | 异步包装并指定队列优先级 |
-| `deferCurrentTask()` / `deferCurrentTask(priorityAdjust)` | 把当前任务放到队列末尾，小心循环等待 |
-| `getCurrentPriority()` | 当前任务优先级 |
-| `stop()` | 关闭当前脚本上下文 |
-
-## 相关页面
-
-- [客户端](client.md) —— `Client.waitTick()`、`runOnMainThread`、看门狗与主线程模型
-- [脚本模板](script_template.md) —— 安全睡眠、开关、监听器清理的完整模板
-- [Java 与反射](java_api.md) —— `Packages`、`JavaUtils`、`JavaWrapper` 深入
-- [文件系统（FS）](fs.md) —— 配合时间戳写日志文件
